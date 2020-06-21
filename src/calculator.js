@@ -10,21 +10,20 @@ export const getTangents = (c1, c2) => {
 
   return {
     L1: {
-      x: c1.x + c1.radius * -1 * Math.sin(alpha),
+      x: c1.x + c1.radius * Math.sin(alpha) * -1,
       y: c1.y + c1.radius * Math.cos(alpha),
     },
     R1: {
       x: c1.x + c1.radius * Math.sin(alpha),
       y: c1.y - c1.radius * Math.cos(alpha),
     },
-
     L2: {
-      x: c2.x + c2.radius * -1 * Math.sin(alpha),
+      x: c2.x + c2.radius * Math.sin(alpha) * -1,
       y: c2.y + c2.radius * Math.cos(alpha),
     },
     R2: {
-      x: c2.x - c2.radius * -1 * Math.sin(alpha),
-      y: c2.y + c2.radius * -1 * Math.cos(alpha),
+      x: c2.x - c2.radius * Math.sin(alpha) * -1,
+      y: c2.y + c2.radius * Math.cos(alpha) * -1,
     },
   }
 }

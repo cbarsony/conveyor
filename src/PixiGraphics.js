@@ -9,19 +9,49 @@ const pixiApp = new PIXI.Application({
 })
 window.pixiApp = pixiApp
 
-export const Graphics = ({pulleys}) => {
-  console.log('outside', pulleys)
+export const PixiGraphics = ({pulleys}) => {
   const canvasContainer = React.createRef()
 
+  function onMouseDown() {
+    this.alpha = 0.5
+    this.dragging = true
+  }
+
+  function onMouseUp() {
+    this.alpha = 1
+    this.dragging = false
+  }
+
+  function onMouseMove(e) {
+    if(this.dragging) {
+      const newPosition = e.data.getLocalPosition(this)
+      this.position.x = newPosition.x
+      this.position.y = newPosition.y
+    }
+  }
+
   pulleys.forEach((pulley, pulleyIndex) => {
-    const circle = new PIXI.Graphics()
     const notFirstPulley = pulleyIndex > 0
-
+    const circle = new PIXI.Graphics()
     circle.lineStyle(2, 0x888888)
-      .beginFill(0xffffff)
+      .beginFill(0xaaaaaa)
       .drawCircle(pulley.x, pulley.y, pulley.radius)
+      .endFill()
 
-    pixiApp.stage.addChild(circle)
+    const x = pixiApp.renderer.generateTexture(circle)
+
+    const texture = new PIXI.Sprite(x)
+
+    texture.interactive = true
+    texture.buttonMode = true
+    texture
+      .on('mousedown', onMouseDown)
+      .on('mouseup', onMouseUp)
+      .on('mousemove', onMouseMove)
+
+
+
+    pixiApp.stage.addChild(texture)
 
     if(notFirstPulley) {
       const lastPulley = pulleys[pulleyIndex - 1]
@@ -46,7 +76,6 @@ export const Graphics = ({pulleys}) => {
   })
 
   React.useEffect(() => {
-    console.log('inside', pulleys)
     canvasContainer.current.appendChild(pixiApp.view)
   }, [])
 

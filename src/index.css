@@ -13,10 +13,31 @@ code {
 }
 
 #App {
+  display: flex;
   padding: 4px;
 }
 
-#CanvasContainer > canvas {
+.konvajs-content {
   border: solid 1px #d2d2d2;
   margin: 8px 0;
+}
+
+#AddPulleyButton {
+  display: block;
+}
+
+#DataTable {
+  margin-top: 32px;
+  margin-left: 16px;
+  height: 600px;
+  overflow-y: auto;
+}
+
+#DataTable th,
+#DataTable td {
+  padding: 0 10px;
+}
+
+#DataTable tr.selected {
+  background-color: red;
 }
