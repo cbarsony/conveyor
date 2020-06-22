@@ -21,8 +21,8 @@ export const KonvaGraphics = ({pulleys, points, onPulleySelect, selectedPulleyId
           radius={50}
           stroke="#888"
           fill="#eee"
-          shadowBlur={8}
-          shadowOpacity={0.4}
+          shadowBlur={6}
+          shadowOpacity={0.3}
         />
         <Circle
           id="pulley2"
@@ -31,8 +31,8 @@ export const KonvaGraphics = ({pulleys, points, onPulleySelect, selectedPulleyId
           radius={50}
           stroke="#888"
           fill="#eee"
-          shadowBlur={8}
-          shadowOpacity={0.4}
+          shadowBlur={6}
+          shadowOpacity={0.3}
         />
         <Shape
           sceneFunc={(context, shape) => {
@@ -190,8 +190,8 @@ export const KonvaGraphics = ({pulleys, points, onPulleySelect, selectedPulleyId
 
           return (
             <React.Fragment>
-              {pointComponent}
               {lines}
+              {pointComponent}
             </React.Fragment>
           )
         })}

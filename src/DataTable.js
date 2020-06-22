@@ -42,7 +42,7 @@ export const DataTable = (
               />
             </td>
             <td>
-              <button onClick={() => deletePoint(point.id)}>X</button>
+              <button onClick={() => deletePoint(point.id)}>&#10006;</button>
             </td>
           </tr>
         ))}
