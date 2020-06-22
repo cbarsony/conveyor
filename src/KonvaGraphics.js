@@ -3,7 +3,6 @@ import {Stage, Layer, Circle, Line, Shape} from 'react-konva'
 
 import {getTangentOfPointAndCircle1, getTangentOfPointAndCircle2} from './calculator'
 import {Point} from './Point'
-import {uuid} from './uuid'
 
 export const KonvaGraphics = ({pulleys, points, onPulleySelect, selectedPulleyId, isAddingPoint, addPoint}) => {
   return (
