@@ -12,11 +12,6 @@ code {
     monospace;
 }
 
-#App {
-  display: flex;
-  padding: 4px;
-}
-
 .konvajs-content {
   border: solid 1px #d2d2d2;
   margin: 8px 0;
@@ -44,4 +39,28 @@ code {
 
 .isAddingPoint {
   cursor: crosshair;
+}
+
+.App__heading {
+  font-size: 30px;
+  font-weight: bold;
+  color: #383c41;
+  margin: 2px 16px 0;
+  cursor: pointer;
+}
+
+.footer {
+  background-color: #8998a8;
+}
+
+.navbar {
+  background-color: #8998a8;
+}
+
+.App__content {
+  display: flex;
+}
+
+input[type=number] {
+  width: 100px;
 }

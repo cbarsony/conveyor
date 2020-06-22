@@ -20,6 +20,9 @@ export const KonvaGraphics = ({pulleys, points, onPulleySelect, selectedPulleyId
           y={300}
           radius={50}
           stroke="#888"
+          fill="#eee"
+          shadowBlur={8}
+          shadowOpacity={0.4}
         />
         <Circle
           id="pulley2"
@@ -27,6 +30,33 @@ export const KonvaGraphics = ({pulleys, points, onPulleySelect, selectedPulleyId
           y={300}
           radius={50}
           stroke="#888"
+          fill="#eee"
+          shadowBlur={8}
+          shadowOpacity={0.4}
+        />
+        <Shape
+          sceneFunc={(context, shape) => {
+            context.beginPath()
+            context.moveTo(150, 290)
+            context.lineTo(150, 310)
+            context.moveTo(140, 300)
+            context.lineTo(160, 300)
+            context.fillStrokeShape(shape);
+          }}
+          stroke="#f66"
+          strokeWidth={1}
+        />
+        <Shape
+          sceneFunc={(context, shape) => {
+            context.beginPath()
+            context.moveTo(650, 290)
+            context.lineTo(650, 310)
+            context.moveTo(640, 300)
+            context.lineTo(660, 300)
+            context.fillStrokeShape(shape);
+          }}
+          stroke="#f66"
+          strokeWidth={1}
         />
         <Line
           points={[150, 350, 650, 350]}
