@@ -5,7 +5,25 @@ export const getAngleOfTwoPoints = (p1, p2) => {
   return partialResult > 0 ? partialResult : Math.PI * 2 + partialResult
 }
 
-export const getTangents = (c1, c2) => {
+export const getTangentOfPointAndCircle1 = (point, circle) => {
+  const alpha = getAngleOfTwoPoints({x: circle.x, y: circle.y - 50}, point)
+
+  return {
+    x: circle.x - circle.radius * Math.sin(alpha) * -1,
+    y: circle.y + circle.radius * Math.cos(alpha) * -1,
+  }
+}
+
+export const getTangentOfPointAndCircle2 = (point, circle) => {
+  const alpha = getAngleOfTwoPoints({x: circle.x, y: circle.y - 50}, point)
+
+  return {
+    x: circle.x - circle.radius * Math.sin(alpha),
+    y: circle.y + circle.radius * Math.cos(alpha),
+  }
+}
+
+export const getTangentsOfTwoCircles = (c1, c2) => {
   const alpha = getAngleOfTwoPoints(c1, c2)
 
   return {

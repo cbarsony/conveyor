@@ -3,45 +3,71 @@ import _ from 'lodash'
 
 import {KonvaGraphics} from './KonvaGraphics'
 import {DataTable} from './DataTable'
+import {uuid} from './uuid'
 
 export const App = () => {
-  const [pulleys, setPulleys] = React.useState([])
+  const [pulleys, setPulleys] = React.useState([
+    new Pulley(150, 300, 50),
+    new Pulley(650, 300, 50),
+  ])
+  const [points, setPoints] = React.useState([])
+  const [isAddingPoint, setAddingPoint] = React.useState(false)
   const [selectedPulleyId, setSelectedPulleyId] = React.useState()
   const onPulleySelect = id => setSelectedPulleyId(id)
+  const addPoint = (x, y) => setPoints(points => {
+    if(points.length === 0) {
+      return [new Point(x, y)]
+    }
+    else {
+      const indexOfFirstPointWithBiggerX = points.findIndex(point => {
+        return point.x > x
+      })
+      if(indexOfFirstPointWithBiggerX === -1) {
+        return [...points, new Point(x, y)]
+      }
+      else {
+        points.splice(indexOfFirstPointWithBiggerX, 0, new Point(x, y))
+        return _.cloneDeep(points)
+      }
+    }
+  })
 
   return (
     <div id="App">
       <div id="GraphicsContainer">
         <button
-          id="AddPulleyButton"
-          onClick={() => setPulleys(pulleys => [...pulleys, new Pulley(
-            Math.ceil(Math.random() * 700 + 50),
-            Math.ceil(Math.random() * 500 + 50),
-            Math.ceil(Math.random() * 40 + 10)
-          )])}
-        >
-          Add pulley
-        </button>
+          onClick={() => setAddingPoint(!isAddingPoint)}
+        >{isAddingPoint ? 'Cancel' : 'Add Point'}</button>
         <KonvaGraphics
           pulleys={pulleys}
+          points={points}
           onPulleySelect={onPulleySelect}
           selectedPulleyId={selectedPulleyId}
+          isAddingPoint={isAddingPoint}
+          xaddPoint={(x, y) => setPoints(points => [...points, new Point(x, y)])}
+          addPoint={addPoint}
         />
       </div>
       <DataTable
         pulleys={pulleys}
+        points={points}
         selectedPulleyId={selectedPulleyId}
         onPulleyRadiusChange={(pulleyId, radius) => setPulleys(pulleys => {
           pulleys.find(p => p.id === pulleyId).radius = radius
           return _.cloneDeep(pulleys)
         })}
-        onPulleyXChange={(pulleyId, x) => setPulleys(pulleys => {
-          pulleys.find(p => p.id === pulleyId).x = x
-          return _.cloneDeep(pulleys)
+        onPointXChange={(pointId, x) => setPoints(points => {
+          points.find(p => p.id === pointId).x = x
+          return _.cloneDeep(points)
         })}
-        onPulleyYChange={(pulleyId, y) => setPulleys(pulleys => {
-          pulleys.find(p => p.id === pulleyId).y = y
-          return _.cloneDeep(pulleys)
+        onPointYChange={(pointId, y) => setPoints(points => {
+          points.find(p => p.id === pointId).y = y
+          return _.cloneDeep(points)
+        })}
+        deletePoint={id => setPoints(points => {
+          const index = points.findIndex(p => p.id === id)
+          points.splice(index, 1)
+          return _.cloneDeep(points)
         })}
       />
     </div>
@@ -50,15 +76,17 @@ export const App = () => {
 
 class Pulley {
   constructor(x, y, radius = 10) {
-    this.id = Pulley.incrementId()
+    this.id = uuid()
     this.x = x
     this.y = y
     this.radius = radius
   }
+}
 
-  static incrementId() {
-    if (!this.latestId) this.latestId = 1
-    else this.latestId++
-    return this.latestId
+class Point {
+  constructor(x, y) {
+    this.id = uuid()
+    this.x = x
+    this.y = y
   }
 }

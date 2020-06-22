@@ -1,7 +1,7 @@
 import {
   getDistanceOfTwoPoints,
   getAngleOfTwoPoints,
-  getTangents,
+  getTangentsOfTwoCircles,
 } from './calculator'
 
 it('getDistanceOfTwoPoints', () => {
@@ -54,5 +54,5 @@ it('getTangents', () => {
     p1: {x: 0, y: 0, radius: 10},
     p2: {x: 10, y: 10, radius: 10},
     result: [],
-  }].forEach(d => expect(getTangents(d.p1, d.p2)).toEqual(d.result))
+  }].forEach(d => expect(getTangentsOfTwoCircles(d.p1, d.p2)).toEqual(d.result))
 })

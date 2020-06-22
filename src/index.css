@@ -41,3 +41,7 @@ code {
 #DataTable tr.selected {
   background-color: red;
 }
+
+.isAddingPoint {
+  cursor: crosshair;
+}
