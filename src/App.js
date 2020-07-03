@@ -1,36 +1,14 @@
 import React from 'react'
 import _ from 'lodash'
 
-import {KonvaGraphics} from './KonvaGraphics'
+// import {KonvaGraphics} from './KonvaGraphics'
 import {DataTable} from './DataTable'
 import {uuid} from './uuid'
+import {Conveyor} from './model'
+import {Designer} from './Designer'
 
 export const App = () => {
-  const [pulleys, setPulleys] = React.useState([
-    new Pulley(150, 300, 50),
-    new Pulley(650, 300, 50),
-  ])
-  const [points, setPoints] = React.useState([])
-  const [isAddingPoint, setAddingPoint] = React.useState(false)
-  const [selectedPulleyId, setSelectedPulleyId] = React.useState()
-  const onPulleySelect = id => setSelectedPulleyId(id)
-  const addPoint = (x, y) => setPoints(points => {
-    if(points.length === 0) {
-      return [new Point(x, y)]
-    }
-    else {
-      const indexOfFirstPointWithBiggerX = points.findIndex(point => {
-        return point.x > x
-      })
-      if(indexOfFirstPointWithBiggerX === -1) {
-        return [...points, new Point(x, y)]
-      }
-      else {
-        points.splice(indexOfFirstPointWithBiggerX, 0, new Point(x, y))
-        return _.cloneDeep(points)
-      }
-    }
-  })
+  const [conveyor, setConveyor] = React.useState(new Conveyor())
 
   return (
     <div className="App">
@@ -78,19 +56,15 @@ export const App = () => {
       <section className="section">
         <div className="container App__content">
           <div id="GraphicsContainer">
-            <button
-              onClick={() => setAddingPoint(!isAddingPoint)}
-            >{isAddingPoint ? 'Cancel' : 'Add Point'}</button>
-            <KonvaGraphics
-              pulleys={pulleys}
-              points={points}
-              onPulleySelect={onPulleySelect}
-              selectedPulleyId={selectedPulleyId}
-              isAddingPoint={isAddingPoint}
-              xaddPoint={(x, y) => setPoints(points => [...points, new Point(x, y)])}
-              addPoint={addPoint}
-            />
+            {/*<button
+              onClick={() => setConveyor(conveyor => {
+                conveyor.parts[0].location.x = 300
+                return _.cloneDeep(conveyor)
+              })}
+            >XXX</button>*/}
+            <Designer conveyor={conveyor}/>
           </div>
+{/*
           <DataTable
             pulleys={pulleys}
             points={points}
@@ -113,6 +87,7 @@ export const App = () => {
               return _.cloneDeep(points)
             })}
           />
+*/}
         </div>
       </section>
 
@@ -127,6 +102,7 @@ export const App = () => {
     </div>
   )
 
+/*
   return (
     <div id="App">
       <div id="GraphicsContainer">
@@ -176,6 +152,7 @@ export const App = () => {
       </footer>
     </div>
   )
+*/
 }
 
 class Pulley {
