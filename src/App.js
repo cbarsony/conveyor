@@ -1,9 +1,5 @@
 import React from 'react'
-import _ from 'lodash'
 
-// import {KonvaGraphics} from './KonvaGraphics'
-import {DataTable} from './DataTable'
-import {uuid} from './uuid'
 import {Conveyor} from './model'
 import {Designer} from './Designer'
 
@@ -41,9 +37,9 @@ export const App = () => {
               <div className="field is-grouped">
                 <p className="control">
                   <a className="button is-primary" href="#">
-              <span className="icon">
-                <i className="far fa-envelope-open"></i>
-              </span>
+                    <span className="icon">
+                      <i className="far fa-envelope-open"></i>
+                    </span>
                     <span>Contact</span>
                   </a>
                 </p>
@@ -56,38 +52,8 @@ export const App = () => {
       <section className="section">
         <div className="container App__content">
           <div id="GraphicsContainer">
-            {/*<button
-              onClick={() => setConveyor(conveyor => {
-                conveyor.parts[0].location.x = 300
-                return _.cloneDeep(conveyor)
-              })}
-            >XXX</button>*/}
             <Designer conveyor={conveyor}/>
           </div>
-{/*
-          <DataTable
-            pulleys={pulleys}
-            points={points}
-            selectedPulleyId={selectedPulleyId}
-            onPulleyRadiusChange={(pulleyId, radius) => setPulleys(pulleys => {
-              pulleys.find(p => p.id === pulleyId).radius = radius
-              return _.cloneDeep(pulleys)
-            })}
-            onPointXChange={(pointId, x) => setPoints(points => {
-              points.find(p => p.id === pointId).x = x
-              return _.cloneDeep(points)
-            })}
-            onPointYChange={(pointId, y) => setPoints(points => {
-              points.find(p => p.id === pointId).y = y
-              return _.cloneDeep(points)
-            })}
-            deletePoint={id => setPoints(points => {
-              const index = points.findIndex(p => p.id === id)
-              points.splice(index, 1)
-              return _.cloneDeep(points)
-            })}
-          />
-*/}
         </div>
       </section>
 
@@ -101,73 +67,4 @@ export const App = () => {
 
     </div>
   )
-
-/*
-  return (
-    <div id="App">
-      <div id="GraphicsContainer">
-        <button
-          onClick={() => setAddingPoint(!isAddingPoint)}
-        >{isAddingPoint ? 'Cancel' : 'Add Point'}</button>
-        <KonvaGraphics
-          pulleys={pulleys}
-          points={points}
-          onPulleySelect={onPulleySelect}
-          selectedPulleyId={selectedPulleyId}
-          isAddingPoint={isAddingPoint}
-          xaddPoint={(x, y) => setPoints(points => [...points, new Point(x, y)])}
-          addPoint={addPoint}
-        />
-      </div>
-      <DataTable
-        pulleys={pulleys}
-        points={points}
-        selectedPulleyId={selectedPulleyId}
-        onPulleyRadiusChange={(pulleyId, radius) => setPulleys(pulleys => {
-          pulleys.find(p => p.id === pulleyId).radius = radius
-          return _.cloneDeep(pulleys)
-        })}
-        onPointXChange={(pointId, x) => setPoints(points => {
-          points.find(p => p.id === pointId).x = x
-          return _.cloneDeep(points)
-        })}
-        onPointYChange={(pointId, y) => setPoints(points => {
-          points.find(p => p.id === pointId).y = y
-          return _.cloneDeep(points)
-        })}
-        deletePoint={id => setPoints(points => {
-          const index = points.findIndex(p => p.id === id)
-          points.splice(index, 1)
-          return _.cloneDeep(points)
-        })}
-      />
-      <footer className="footer">
-        <div className="content has-text-centered">
-          <p>
-            <strong>Bulma</strong> by <a href="https://jgthms.com">Jeremy Thomas</a>. The source code is licensed
-            <a href="http://opensource.org/licenses/mit-license.php">MIT</a>. The website content
-            is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>.
-          </p>
-        </div>
-      </footer>
-    </div>
-  )
-*/
-}
-
-class Pulley {
-  constructor(x, y, radius = 10) {
-    this.id = uuid()
-    this.x = x
-    this.y = y
-    this.radius = radius
-  }
-}
-
-class Point {
-  constructor(x, y) {
-    this.id = uuid()
-    this.x = x
-    this.y = y
-  }
 }

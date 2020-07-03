@@ -1,8 +1,10 @@
 import {
   getDistanceOfTwoPoints,
   getAngleOfTwoPoints,
-  getTangentsOfTwoCircles,
+  getTangents,
 } from './calculator'
+
+import {Pulley, Point, ROTATION_DIRECTION} from './model'
 
 it('getDistanceOfTwoPoints', () => {
   [
@@ -50,9 +52,12 @@ it('getAngleOfTwoPoints', () => {
 })
 
 it('getTangents', () => {
-  [{
-    p1: {x: 0, y: 0, radius: 10},
-    p2: {x: 10, y: 10, radius: 10},
-    result: [],
-  }].forEach(d => expect(getTangentsOfTwoCircles(d.p1, d.p2)).toEqual(d.result))
+  const p1 = new Pulley(new Point(20, 20), 20)
+  const p2 = new Pulley(new Point(70, 100), 30, ROTATION_DIRECTION.ANTICLOCKWISE)
+  const tangents = getTangents(p1, p2)
+
+  expect(tangents.start.x).toBeCloseTo(40)
+  expect(tangents.start.y).toBeCloseTo(20)
+  expect(tangents.end.x).toBeCloseTo(40)
+  expect(tangents.end.y).toBeCloseTo(100)
 })

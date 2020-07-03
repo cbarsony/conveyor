@@ -63,7 +63,7 @@ export class BeltPoint extends ConveyorPart {
 export class Pulley extends ConveyorPart {
   /**
    * @param location {Point}
-   * @param radius {number} - meter
+   * @param radius {number|undefined} - meter
    * @param rotationDirection {ROTATION_DIRECTION}
    */
   constructor(location, radius = 20, rotationDirection = ROTATION_DIRECTION.CLOCKWISE) {
@@ -183,18 +183,23 @@ export class ArcBeltSection extends ConveyorPart {
 }
 
 export class Conveyor {
+  /*constructor() {
+    const p1 = new Pulley(new Point(20, 20))
+  }*/
   constructor() {
     const p1 = new Pulley(new Point(100, 100))
     const p2 = new Pulley(new Point(200, 100), 50)
     const p3 = new Pulley(new Point(200, 300), 50, ROTATION_DIRECTION.ANTICLOCKWISE)
     const p4 = new Pulley(new Point(600, 300), 200)
     const p5 = new BeltPoint(new Point(100, 500))
+    const p6 = new Pulley(new Point(100, 280), undefined, ROTATION_DIRECTION.ANTICLOCKWISE)
 
     const b1 = new FreeBeltSection(p1, p2)
     const b2 = new FreeBeltSection(p2, p3)
     const b3 = new FreeBeltSection(p3, p4)
     const b4 = new FreeBeltSection(p4, p5)
-    const b5 = new FreeBeltSection(p5, p1)
+    const b5 = new FreeBeltSection(p5, p6)
+    const b6 = new FreeBeltSection(p6, p1)
 
     this.parts = [
       p1,
@@ -202,111 +207,16 @@ export class Conveyor {
       p3,
       p4,
       p5,
+      p6,
+
       b1,
       b2,
       b3,
       b4,
       b5,
+      b6,
     ]
   }
-
-/*
-  constructor() {
-    const pulley1 = new Pulley(new Point(100, 100), 100)
-    const pulley2 = new Pulley(new Point(250, 100))
-    const belt1_2 = new FreeBeltSection(pulley1, pulley2)
-    const belt2_1 = new FreeBeltSection(pulley2, pulley1)
-
-    const pulley3 = new Pulley(new Point(400, 100), 100)
-    const pulley4 = new Pulley(new Point(400, 300))
-    const belt3_4 = new FreeBeltSection(pulley3, pulley4)
-    const belt4_3 = new FreeBeltSection(pulley4, pulley3)
-
-    const pulley5 = new Pulley(new Point(700, 100))
-    const pulley6 = new Pulley(new Point(650, 300), 150)
-    const belt5_6 = new FreeBeltSection(pulley5, pulley6)
-    const belt6_5 = new FreeBeltSection(pulley6, pulley5)
-
-    const pulley7 = new Pulley(new Point(1000, 100), 100, ROTATION_DIRECTION.ANTICLOCKWISE)
-    const pulley8 = new Pulley(new Point(900, 300), 50)
-    const belt7_8 = new FreeBeltSection(pulley7, pulley8)
-    const belt8_7 = new FreeBeltSection(pulley8, pulley7)
-
-    const pulley9 = new Pulley(new Point(210, 600), 180)
-    const pulley10 = new Pulley(new Point(500, 600))
-    const belt9_10 = new FreeBeltSection(pulley9, pulley10)
-    const belt10_9 = new FreeBeltSection(pulley10, pulley9)
-
-    const pulley11 = new Pulley(new Point(700, 600), 50)
-    const pulley12 = new Pulley(new Point(900, 600), 50)
-    const belt11_12 = new FreeBeltSection(pulley11, pulley12)
-    const belt12_11 = new FreeBeltSection(pulley12, pulley11)
-
-    const pulley13 = new Pulley(new Point(700, 720), 50, ROTATION_DIRECTION.ANTICLOCKWISE)
-    const pulley14 = new Pulley(new Point(900, 720), 50, ROTATION_DIRECTION.ANTICLOCKWISE)
-    const belt13_14 = new FreeBeltSection(pulley13, pulley14)
-    const belt14_13 = new FreeBeltSection(pulley14, pulley13)
-
-    const pulley15 = new Pulley(new Point(1050, 600), 50)
-    const pulley16 = new Pulley(new Point(1050, 720), 50)
-    const belt15_16 = new FreeBeltSection(pulley15, pulley16)
-    const belt16_15 = new FreeBeltSection(pulley16, pulley15)
-
-    // const firstPulley = new Pulley(new Point(300, 100), 100)
-    // const secondPulley = new Pulley(new Point(500, 300), 40)
-    // const beltPoint1 = new BeltPoint(new Point(100, 100))
-    // const beltPoint2 = new BeltPoint(new Point(300, 200))
-    // const beltSection1 = new FreeBeltSection(beltPoint1, beltPoint2)
-    // const upperFreeBeltSection = new FreeBeltSection(firstPulley, secondPulley)
-    // const firstArcBeltSection = new ArcBeltSection(firstPulley, secondPulley, beltPoint)
-    // const secondArcBeltSection = new ArcBeltSection(secondPulley, beltPoint, firstPulley)
-    // const bottomFreeBeltSection1 = new FreeBeltSection(secondPulley, firstPulley)
-    // const bottomFreeBeltSection2 = new FreeBeltSection(beltPoint, firstPulley)
-
-    /!** @type {ConveyorPart[]} *!/
-    this.parts = [
-      pulley1,
-      pulley2,
-      belt1_2,
-      belt2_1,
-
-      pulley3,
-      pulley4,
-      belt3_4,
-      belt4_3,
-
-      pulley5,
-      pulley6,
-      belt5_6,
-      belt6_5,
-
-      pulley7,
-      pulley8,
-      belt7_8,
-      belt8_7,
-
-      pulley9,
-      pulley10,
-      belt9_10,
-      belt10_9,
-
-      pulley11,
-      pulley12,
-      belt11_12,
-      belt12_11,
-
-      pulley13,
-      pulley14,
-      belt13_14,
-      belt14_13,
-
-      pulley15,
-      pulley16,
-      belt15_16,
-      belt16_15,
-    ]
-  }
-*/
 
   /**
    * @param index {number} - Index of FreeBeltSection in this.parts

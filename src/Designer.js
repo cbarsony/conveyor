@@ -1,5 +1,5 @@
 import React from 'react'
-import {Stage, Layer, Circle, Line, Shape} from 'react-konva'
+import {Stage, Layer} from 'react-konva'
 
 export const Designer = ({conveyor}) => (
   <Stage
