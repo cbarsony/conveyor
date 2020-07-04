@@ -1,5 +1,5 @@
 import React from 'react'
-import {Shape, Line, Circle} from 'react-konva'
+import {Shape, Line, Circle, Group} from 'react-konva'
 
 import {uuid} from './uuid'
 import {getTangents} from './calculator'
@@ -69,6 +69,7 @@ export class Pulley extends ConveyorPart {
   constructor(location, radius = 20, rotationDirection = ROTATION_DIRECTION.CLOCKWISE) {
     super(location)
 
+    this.id = uuid()
     this.radius = radius
     this.rotationDirection = rotationDirection
   }
@@ -78,8 +79,15 @@ export class Pulley extends ConveyorPart {
     const y = this.location.y
 
     return (
-      <React.Fragment
-        key={uuid()}
+      <Group
+        id={this.id}
+        key={this.id}
+        draggable
+        onDragEnd={({evt}) => {
+          // this.location.x = evt.layerX
+          // this.location.y = evt.layerY
+          // this.draw()
+        }}
       >
         <Circle
           x={x}
@@ -102,7 +110,7 @@ export class Pulley extends ConveyorPart {
           stroke="#f66"
           strokeWidth={1}
         />
-      </React.Fragment>
+      </Group>
     )
   }
 }
@@ -113,10 +121,10 @@ export class FreeBeltSection extends ConveyorPart {
    * @param endConveyorPart {ConveyorPart}
    */
   constructor(startConveyorPart, endConveyorPart) {
-    //temporary
-    const location = startConveyorPart.location
-    super(location)
+    const tangents = getTangents(startConveyorPart, endConveyorPart)
+    super(tangents.start)
 
+    this.endLocation = tangents.end
     this.startConveyorPart = startConveyorPart
     this.endConveyorPart = endConveyorPart
   }
@@ -137,12 +145,12 @@ export class FreeBeltSection extends ConveyorPart {
           ]}
           stroke="#888"
         />
-        <Circle
-          x={tangents.end.x}
-          y={tangents.end.y}
+        {/*<Circle
+          x={this.endLocation.x}
+          y={this.endLocation.y}
           radius={3}
           stroke={'red'}
-        />
+        />*/}
       </React.Fragment>
     )
   }
@@ -203,17 +211,16 @@ export class Conveyor {
 
     this.parts = [
       p1,
-      p2,
-      p3,
-      p4,
-      p5,
-      p6,
-
       b1,
+      p2,
       b2,
+      p3,
       b3,
+      p4,
       b4,
+      p5,
       b5,
+      p6,
       b6,
     ]
   }

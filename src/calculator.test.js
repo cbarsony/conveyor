@@ -2,6 +2,7 @@ import {
   getDistanceOfTwoPoints,
   getAngleOfTwoPoints,
   getTangents,
+  getDistanceOfSectionAndPoint,
 } from './calculator'
 
 import {Pulley, Point, ROTATION_DIRECTION} from './model'
@@ -60,4 +61,14 @@ it('getTangents', () => {
   expect(tangents.start.y).toBeCloseTo(20)
   expect(tangents.end.x).toBeCloseTo(40)
   expect(tangents.end.y).toBeCloseTo(100)
+})
+
+it('getDistanceOfSectionAndPoint', () => {
+  const s = [
+    {x: 0, y: 0},
+    {x: 10, y: 10},
+  ]
+  const p = {x: 10, y: 5}
+
+  expect(getDistanceOfSectionAndPoint(s, p)).toBeCloseTo(5 / 1.4, 0.1)
 })
