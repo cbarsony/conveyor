@@ -1,12 +1,28 @@
 import React from 'react'
-import _ from 'lodash'
+import update from 'immutability-helper'
 
-import {Conveyor, Pulley, Point, FreeBeltSection} from './model'
 import {Designer} from './Designer'
 
+export const ROTATION = {
+  CLOCKWISE: 'CLOCKWISE',
+  ANTICLOCKWISE: 'ANTICLOCKWISE',
+}
+
 export const App = () => {
-  const [conveyor, setConveyor] = React.useState(new Conveyor())
-  const [dropItem, setDropItem] = React.useState(null)
+  const [pulleys, setPulleys] = React.useState([
+    {
+      x: 20,
+      y: 100,
+      radius: 20,
+      rotation: ROTATION.CLOCKWISE,
+    },
+    {
+      x: 500,
+      y: 500,
+      radius: 300,
+      rotation: ROTATION.CLOCKWISE,
+    },
+  ])
 
   return (
     <div className="App">
@@ -54,40 +70,19 @@ export const App = () => {
       <section className="section">
         <div className="container App__content">
           <div id="GraphicsContainer">
-            <button
-              onClick={() => {
-                setDropItem(dropItem => {
-                  if(dropItem === 'Pulley') {
-                    return null
-                  }
-                  else {
-                    return 'Pulley'
-                  }
-                })
-              }}
-
-            >{dropItem === 'Pulley' ? 'Cancel' : 'Add Pulley'}</button>
             <Designer
-              conveyor={conveyor}
-              dropItem={dropItem}
-              onPulleyDrop={(location, partIndex) => {
-                setConveyor(conveyor => {
-                  const previousPart = partIndex === 0 ? conveyor.parts[conveyor.parts.length - 1] : conveyor.parts[partIndex - 1]
-                  const nextPart = partIndex === conveyor.parts.length - 1 ? conveyor.parts[0] : conveyor.parts[partIndex + 1]
-                  const newPulley = new Pulley(new Point(location.x, location.y))
-                  const firstNewBeltSection = new FreeBeltSection(previousPart, newPulley)
-                  const secondNewBeltSection = new FreeBeltSection(newPulley, nextPart)
-                  conveyor.parts.splice(partIndex, 1, firstNewBeltSection, newPulley, secondNewBeltSection)
-                  return _.cloneDeep(conveyor)
-                })
-              }}
-              onPulleyMove={(pulleyId, location) => {
-                setConveyor(conveyor => {
-                  const pulley = conveyor.parts.find(p => p.id === pulleyId)
-                  pulley.location.x = location.x
-                  pulley.location.y = location.y
-                  return _.cloneDeep(conveyor)
-                })
+              pulleys={pulleys}
+              onPulleyMove={(pulleyIndex, x, y) => {
+                setPulleys(pulleys => update(pulleys, {
+                  [pulleyIndex]: {
+                    x: {
+                      $set: x,
+                    },
+                    y: {
+                      $set: y,
+                    },
+                  },
+                }))
               }}
             />
           </div>
