@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
+
 import React from 'react'
 import update from 'immutability-helper'
 
@@ -11,18 +13,19 @@ export const ROTATION = {
 export const App = () => {
   const [pulleys, setPulleys] = React.useState([
     {
-      x: 20,
-      y: 100,
+      x: 200,
+      y: 250,
       radius: 20,
       rotation: ROTATION.CLOCKWISE,
     },
     {
-      x: 500,
-      y: 500,
-      radius: 300,
+      x: 1000,
+      y: 250,
+      radius: 50,
       rotation: ROTATION.CLOCKWISE,
     },
   ])
+  const [dropItem, setDropItem] = React.useState(null)
 
   return (
     <div className="App">
@@ -70,8 +73,31 @@ export const App = () => {
       <section className="section">
         <div className="container App__content">
           <div id="GraphicsContainer">
+            <button
+              onClick={() => {
+                setDropItem(dropItem => {
+                  if(dropItem === 'Pulley') {
+                    return null
+                  }
+                  else {
+                    return 'Pulley'
+                  }
+                })
+              }}
+            >{dropItem === 'Pulley' ? 'Cancel' : 'Add Pulley'}</button>
             <Designer
               pulleys={pulleys}
+              dropItem={dropItem}
+              onPulleyDrop={(dropPoint, pulleyIndex) => {
+                setPulleys(pulleys => update(pulleys, {
+                  $splice: [[pulleyIndex + 1, 0, {
+                    x: dropPoint.x,
+                    y: dropPoint.y,
+                    radius: 20,
+                    rotation: ROTATION.CLOCKWISE,
+                  }]]
+                }))
+              }}
               onPulleyMove={(pulleyIndex, x, y) => {
                 setPulleys(pulleys => update(pulleys, {
                   [pulleyIndex]: {
