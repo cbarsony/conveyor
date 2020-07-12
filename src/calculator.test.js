@@ -1,11 +1,10 @@
+import {ROTATION} from './App'
 import {
   getDistanceOfTwoPoints,
   getAngleOfTwoPoints,
   getTangents,
   getDistanceOfSectionAndPoint,
 } from './calculator'
-
-import {Pulley, Point, ROTATION_DIRECTION} from './model'
 
 it('getDistanceOfTwoPoints', () => {
   [
@@ -53,8 +52,18 @@ it('getAngleOfTwoPoints', () => {
 })
 
 it('getTangents', () => {
-  const p1 = new Pulley(new Point(20, 20), 20)
-  const p2 = new Pulley(new Point(70, 100), 30, ROTATION_DIRECTION.ANTICLOCKWISE)
+  const p1 = {
+    x: 20,
+    y: 20,
+    radius: 20,
+    rotation: ROTATION.CLOCKWISE,
+  }
+  const p2 = {
+    x: 70,
+    y: 100,
+    radius: 30,
+    rotation: ROTATION.ANTICLOCKWISE,
+  }
   const tangents = getTangents(p1, p2)
 
   expect(tangents.start.x).toBeCloseTo(40)
