@@ -2,8 +2,10 @@
 
 import React from 'react'
 import update from 'immutability-helper'
+import _ from 'lodash'
 
 import {Designer} from './Designer'
+import {uuid} from './uuid'
 
 export const ROTATION = {
   CLOCKWISE: 'CLOCKWISE',
@@ -11,7 +13,7 @@ export const ROTATION = {
 }
 
 export const App = () => {
-  const [pulleys, setPulleys] = React.useState([
+  /*const [pulleys, setPulleys] = React.useState([
     {
       x: 200,
       y: 250,
@@ -24,7 +26,14 @@ export const App = () => {
       radius: 50,
       rotation: ROTATION.CLOCKWISE,
     },
-  ])
+  ])*/
+  const [pulleys, setPulleys] = React.useState(_.range(5).map(n => ({
+    id: uuid(),
+    x: Math.random() * 1200,
+    y: Math.random() * 600,
+    radius: Math.random() * 30 + 10,
+    rotation: Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
+  })))
   const [dropItem, setDropItem] = React.useState(null)
 
   return (

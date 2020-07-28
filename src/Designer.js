@@ -1,4 +1,5 @@
 import React from 'react'
+import Konva from 'konva'
 import {Stage, Layer, Circle, Line} from 'react-konva'
 
 import {getTangents, getDistanceOfSectionAndPoint} from './calculator'
@@ -16,8 +17,7 @@ const Pulley = ({x, y, radius, rotation, onDragEnd}) => (
     radius={radius}
     stroke="#888"
     fill="#eee"
-    shadowBlur={6}
-    shadowOpacity={0.3}
+    shadowForStrokeEnabled={false}
   />
 )
 
@@ -30,9 +30,100 @@ const Belt = ({start, end}) => (
       end.y,
     ]}
     stroke="#888"
+    shadowForStrokeEnabled={false}
   />
 )
 
+export const Designer = ({pulleys}) => {
+  React.useEffect(() => {
+    const stage = new Konva.Stage({
+      container: 'Designer',
+      width: 1200,
+      height: 600,
+    })
+    const layer = new Konva.Layer()
+
+    pulleys.map((pulley, pulleyIndex) => {
+      const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
+      const prevPulley = pulleyIndex === 0 ? pulleys[pulleys.length - 1] : pulleys[pulleyIndex - 1]
+      const tangents = getTangents(pulley, nextPulley)
+
+      const pulleyGeometry = new Konva.Circle({
+        nextPulleyId: nextPulley.id,
+        prevPulleyId: prevPulley.id,
+        id: pulley.id,
+        x: pulley.x,
+        y: pulley.y,
+        radius: pulley.radius,
+        fill: '#eee',
+        stroke: '#888',
+        shadowForStrokeEnabled: false,
+        draggable: true,
+      })
+
+      pulleyGeometry.on('dragend', ({target}) => {
+        const pulley = stage.findOne(`#${target.attrs.id}`)
+        const pulleyPosition = pulley.getPosition()
+
+        const nextPulley = stage.findOne(`#${target.attrs.nextPulleyId}`)
+        const nextPulleyPosition = nextPulley.getPosition()
+
+        const prevPulley = stage.findOne(`#${target.attrs.prevPulleyId}`)
+        const prevPulleyPosition = prevPulley.getPosition()
+
+        const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
+        const prevLineTangents = getTangents({
+          x: prevPulleyPosition.x,
+          y: prevPulleyPosition.y,
+          radius: prevPulley.getRadius(),
+        }, {
+          x: pulleyPosition.x,
+          y: pulleyPosition.y,
+          radius: pulley.getRadius(),
+        })
+        prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
+
+        const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
+        const nextLineTangents = getTangents({
+          x: pulleyPosition.x,
+          y: pulleyPosition.y,
+          radius: pulley.getRadius(),
+        }, {
+          x: nextPulleyPosition.x,
+          y: nextPulleyPosition.y,
+          radius: nextPulley.getRadius(),
+        })
+        nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
+
+        layer.draw()
+      })
+
+      const line = new Konva.Line({
+        id: `belt_${pulley.id}`,
+        points: [
+          tangents.start.x,
+          tangents.start.y,
+          tangents.end.x,
+          tangents.end.y,
+        ],
+        stroke: '#888',
+        shadowForStrokeEnabled: false,
+      })
+
+      layer.add(pulleyGeometry)
+      layer.add(line)
+    })
+
+    stage.add(layer)
+    layer.draw()
+  }, [])
+
+  return (
+    <div id="Designer"></div>
+  )
+}
+
+/*
 export const Designer = ({pulleys, onPulleyMove, onPulleyDrop, dropItem}) => {
   const [PulleyDropPoint, setPulleyDropLocation] = React.useState({x: 0, y: 0})
   const [selectedPulleyIndex, setSelectedPartIndex] = React.useState(null)
@@ -85,8 +176,7 @@ export const Designer = ({pulleys, onPulleyMove, onPulleyDrop, dropItem}) => {
             radius={20}
             stroke="#888"
             fill="#eee"
-            shadowBlur={6}
-            shadowOpacity={0.3}
+            shadowForStrokeEnabled={false}
           />
         )}
         {pulleys.map((pulley, pulleyIndex) => {
@@ -115,3 +205,4 @@ export const Designer = ({pulleys, onPulleyMove, onPulleyDrop, dropItem}) => {
     </Stage>
   )
 }
+*/
