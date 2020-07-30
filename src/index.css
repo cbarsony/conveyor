@@ -12,6 +12,15 @@ code {
     monospace;
 }
 
+html, body, #root, #Content {
+  height: 100%;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
 .konvajs-content {
   border: solid 1px #d2d2d2;
   margin: 8px 0;
@@ -67,4 +76,9 @@ input[type=number] {
 
 .section {
   padding: 2rem 1rem;
+}
+
+#FooterMessage {
+  display:table;
+  margin:0 auto;
 }

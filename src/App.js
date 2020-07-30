@@ -13,76 +13,93 @@ export const ROTATION = {
 }
 
 export const App = () => {
-  /*const [pulleys, setPulleys] = React.useState([
-    {
-      x: 200,
-      y: 250,
-      radius: 20,
-      rotation: ROTATION.CLOCKWISE,
-    },
-    {
-      x: 1000,
-      y: 250,
-      radius: 50,
-      rotation: ROTATION.CLOCKWISE,
-    },
-  ])*/
   const [pulleys, setPulleys] = React.useState(_.range(5).map(n => ({
     id: uuid(),
-    x: Math.random() * 1200,
-    y: Math.random() * 600,
-    radius: Math.random() * 30 + 10,
-    rotation: Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
+    x: Math.round(Math.random() * 1200),
+    y: Math.round(Math.random() * 600),
+    radius: Math.round(Math.random() * 30 + 10),
+    rotation: Math.random() > 1 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
   })))
   const [dropItem, setDropItem] = React.useState(null)
+  const [selectedPulleyId, setSelectedPulleyId] = React.useState(null)
+  const selectedPulley = pulleys.find(p => p.id === selectedPulleyId)
 
   return (
-    <div className="App">
+    <React.Fragment>
 
-      <nav className="navbar">
-        <div className="navbar-brand">
-          <h1 className="App__heading">Conveyor Designer</h1>
-          <div className="navbar-burger burger" data-target="navbarExampleTransparentExample">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-
-        <div id="navbarExampleTransparentExample" className="navbar-menu">
-          <div className="navbar-start">
-            <a className="navbar-item" href="#">Home</a>
-            <div className="navbar-item has-dropdown is-hoverable">
-              <a className="navbar-link" href="#">About Us</a>
-              <div className="navbar-dropdown is-boxed">
-                <a className="navbar-item" href="#">Our Team</a>
-                <a className="navbar-item" href="#">Our Story</a>
-                <a className="navbar-item" href="#">Locations</a>
-              </div>
-            </div>
-          </div>
-
-          <div className="navbar-end">
-            <div className="navbar-item">
-              <div className="field is-grouped">
-                <p className="control">
-                  <a className="button is-primary" href="#">
-                    <span className="icon">
-                      <i className="far fa-envelope-open"></i>
-                    </span>
-                    <span>Contact</span>
-                  </a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <nav className="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a className="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Conveyor Designer</a>
       </nav>
 
-      <section className="section">
-        <div className="container App__content">
-          <div id="GraphicsContainer">
+      <div id="Content" className="container-fluid row">
+
+        <nav id="sidebarMenu" className="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+          <div className="sidebar-sticky pt-3">
+            {selectedPulleyId && (
+              <form>
+                <div className="form-group row">
+                  <label htmlFor="inputX" className="col-sm-2 col-form-label">X:</label>
+                  <div className="col-sm-10">
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="inputX"
+                      value={selectedPulley.x}
+                      onChange={e => {
+                        const value = e.target.value
+                        const stage = window.Konva.stages[0]
+                        stage.findOne(`#${selectedPulleyId}`).setAttr('x', value)
+                        stage.children[0].draw()
+
+                        setPulleys(pulleys => {
+                          const pulleyIndex = pulleys.findIndex(p => p.id === selectedPulleyId)
+
+                          return update(pulleys, {
+                            [pulleyIndex]: {
+                              x: {
+                                $set: value,
+                              },
+                            },
+                          })
+                        })
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="form-group row">
+                  <label htmlFor="inputY" className="col-sm-2 col-form-label">Y:</label>
+                  <div className="col-sm-10">
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="inputY"
+                      value={selectedPulley.y}
+                      onChange={() => {}}
+                    />
+                  </div>
+                </div>
+                <div className="form-group row">
+                  <label htmlFor="inputRadius" className="col-sm-2 col-form-label">Radius:</label>
+                  <div className="col-sm-10">
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="inputRadius"
+                      value={selectedPulley.radius}
+                      onChange={() => {}}
+                    />
+                  </div>
+                </div>
+              </form>
+            )}
+          </div>
+        </nav>
+
+        <main role="main" className="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+          <div className="d-flex flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
             <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary mr-2"
               onClick={() => {
                 setDropItem(dropItem => {
                   if(dropItem === 'Pulley') {
@@ -94,44 +111,56 @@ export const App = () => {
                 })
               }}
             >{dropItem === 'Pulley' ? 'Cancel' : 'Add Pulley'}</button>
-            <Designer
-              pulleys={pulleys}
-              dropItem={dropItem}
-              onPulleyDrop={(dropPoint, pulleyIndex) => {
-                setPulleys(pulleys => update(pulleys, {
-                  $splice: [[pulleyIndex + 1, 0, {
-                    x: dropPoint.x,
-                    y: dropPoint.y,
-                    radius: 20,
-                    rotation: ROTATION.CLOCKWISE,
-                  }]]
-                }))
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => {
+                const stage = window.Konva.stages[0]
+                stage.findOne(`#${selectedPulleyId}`).setAttr('fill', '#eee')
+                setSelectedPulleyId(null)
+                stage.children[0].draw()
               }}
-              onPulleyMove={(pulleyIndex, x, y) => {
-                setPulleys(pulleys => update(pulleys, {
-                  [pulleyIndex]: {
-                    x: {
-                      $set: x,
-                    },
-                    y: {
-                      $set: y,
-                    },
-                  },
-                }))
-              }}
-            />
+              disabled={!selectedPulley}
+            >Deselect</button>
           </div>
-        </div>
-      </section>
 
-      <footer className="footer">
-        <div className="content has-text-centered">
-          <p>
-            <strong>&copy; 2020 Conveyor Designer. All Rights Reserved.</strong>
-          </p>
+          <Designer
+            selectedPulleyId={selectedPulleyId}
+            setSelectedPulleyId={id => setSelectedPulleyId(id)}
+            pulleys={pulleys}
+            dropItem={dropItem}
+            onPulleyDrop={(dropPoint, pulleyIndex) => {
+              setPulleys(pulleys => update(pulleys, {
+                $splice: [[pulleyIndex + 1, 0, {
+                  x: dropPoint.x,
+                  y: dropPoint.y,
+                  radius: 20,
+                  rotation: ROTATION.CLOCKWISE,
+                }]]
+              }))
+            }}
+            onPulleyMove={(id, x, y) => {
+              setPulleys(pulleys => update(pulleys, {
+                [id]: {
+                  x: {
+                    $set: x,
+                  },
+                  y: {
+                    $set: y,
+                  },
+                },
+              }))
+            }}
+          />
+
+        </main>
+      </div>
+
+      <footer className="footer mt-auto py-3">
+        <div className="container">
+          <span id="FooterMessage">&copy; 2020 Conveyor Designer. All Rights Reserved.</span>
         </div>
       </footer>
 
-    </div>
+    </React.Fragment>
   )
 }
