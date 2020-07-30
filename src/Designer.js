@@ -1,16 +1,69 @@
 import React from 'react'
 import Konva from 'konva'
 
-import {getTangents} from './calculator'
+import {getTangents, getDistanceOfSectionAndPoint} from './calculator'
 
-export const Designer = ({pulleys, selectedPulleyId, setSelectedPulleyId}) => {
+let stage, layer
+
+export const Designer = ({
+    pulleys,
+    selectedPulleyId,
+    setSelectedPulleyId,
+    onPulleyMove,
+    dropItem,
+    setSelectedPartIndex,
+  }) => {
+  const [PulleyDropPoint, setPulleyDropLocation] = React.useState({x: 0, y: 0})
+  const onPulleyClick = ({target}) => {
+    stage.find('Circle').forEach(circle => {
+      if(circle.attrs.id !== selectedPulleyId) {
+        circle.setAttr('fill', '#eee')
+      }
+    })
+
+    const selectedPulley = stage.findOne(`#${target.attrs.id}`)
+    selectedPulley.setAttr('fill', '#e00')
+
+    layer.draw()
+    setSelectedPulleyId(target.attrs.id)
+  }
+  const onStageMouseMove = ({evt}) => {
+    if(dropItem) {
+      let resultPulleyIndex = 0
+      let smallestDistance = Number.MAX_SAFE_INTEGER
+      let beltSectionMiddlePoint = {x: 0, y: 0}
+
+      pulleys.forEach((pulley, pulleyIndex) => {
+        const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
+        const tangents = getTangents(pulley, nextPulley)
+        const distance = getDistanceOfSectionAndPoint([
+          {x: tangents.start.x, y: tangents.start.y},
+          {x: tangents.end.x, y: tangents.end.y},
+        ], {x: evt.layerX, y: evt.layerY})
+
+        if(distance < smallestDistance) {
+          smallestDistance = distance
+          resultPulleyIndex = pulleyIndex
+
+          beltSectionMiddlePoint = {
+            x: (tangents.start.x + tangents.end.x) / 2,
+            y: (tangents.start.y + tangents.end.y) / 2,
+          }
+        }
+      })
+
+      setPulleyDropLocation(beltSectionMiddlePoint)
+      setSelectedPartIndex(resultPulleyIndex)
+    }
+  }
+
   React.useEffect(() =>     {
-      const stage = new Konva.Stage({
+      stage = new Konva.Stage({
         container: 'Designer',
         width: 1200,
         height: 600,
       })
-      const layer = new Konva.Layer()
+      layer = new Konva.Layer()
 
       /*stage.on('click', () => {
        if(selectedPulleyId !== null) {
@@ -21,6 +74,8 @@ export const Designer = ({pulleys, selectedPulleyId, setSelectedPulleyId}) => {
        layer.draw()
        }
        })*/
+
+      stage.on('mousemove', onStageMouseMove)
 
       pulleys.forEach((pulley, pulleyIndex) => {
         const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
@@ -40,17 +95,7 @@ export const Designer = ({pulleys, selectedPulleyId, setSelectedPulleyId}) => {
           draggable: true,
         })
 
-        pulleyGeometry.on('click', ({target}) => {
-          if(selectedPulleyId !== null) {
-            const prevSelectedPulley = stage.findOne(`#${selectedPulleyId}`)
-            prevSelectedPulley.setAttr('fill', '#eee')
-          }
-          const selectedPulley = stage.findOne(`#${target.attrs.id}`)
-          selectedPulley.setAttr('fill', '#e00')
-
-          layer.draw()
-          setSelectedPulleyId(target.attrs.id)
-        })
+        pulleyGeometry.on('click', onPulleyClick)
 
         pulleyGeometry.on('dragend', ({target}) => {
           const pulley = stage.findOne(`#${target.attrs.id}`)
@@ -87,6 +132,7 @@ export const Designer = ({pulleys, selectedPulleyId, setSelectedPulleyId}) => {
           nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
 
           layer.draw()
+          onPulleyMove(target.attrs.id, Math.round(pulleyPosition.x), Math.round(pulleyPosition.y))
         })
 
         const line = new Konva.Line({

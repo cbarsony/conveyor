@@ -6,6 +6,7 @@ import _ from 'lodash'
 
 import {Designer} from './Designer'
 import {uuid} from './uuid'
+import {getTangents} from './calculator'
 
 export const ROTATION = {
   CLOCKWISE: 'CLOCKWISE',
@@ -46,13 +47,48 @@ export const App = () => {
                       id="inputX"
                       value={selectedPulley.x}
                       onChange={e => {
-                        const value = e.target.value
+                        const value = Number(e.target.value)
                         const stage = window.Konva.stages[0]
                         stage.findOne(`#${selectedPulleyId}`).setAttr('x', value)
                         stage.children[0].draw()
 
                         setPulleys(pulleys => {
                           const pulleyIndex = pulleys.findIndex(p => p.id === selectedPulleyId)
+
+                          const pulley = stage.findOne(`#${selectedPulleyId}`)
+                          const pulleyPosition = pulley.getPosition()
+
+                          const nextPulley = stage.findOne(`#${pulley.attrs.nextPulleyId}`)
+                          const nextPulleyPosition = nextPulley.getPosition()
+
+                          const prevPulley = stage.findOne(`#${pulley.attrs.prevPulleyId}`)
+                          const prevPulleyPosition = prevPulley.getPosition()
+
+                          const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
+                          const prevLineTangents = getTangents({
+                            x: prevPulleyPosition.x,
+                            y: prevPulleyPosition.y,
+                            radius: prevPulley.getRadius(),
+                          }, {
+                            x: pulleyPosition.x,
+                            y: pulleyPosition.y,
+                            radius: pulley.getRadius(),
+                          })
+                          prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
+
+                          const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
+                          const nextLineTangents = getTangents({
+                            x: pulleyPosition.x,
+                            y: pulleyPosition.y,
+                            radius: pulley.getRadius(),
+                          }, {
+                            x: nextPulleyPosition.x,
+                            y: nextPulleyPosition.y,
+                            radius: nextPulley.getRadius(),
+                          })
+                          nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
+
+                          window.Konva.stages[0].children[0].draw()
 
                           return update(pulleys, {
                             [pulleyIndex]: {
@@ -74,7 +110,59 @@ export const App = () => {
                       className="form-control"
                       id="inputY"
                       value={selectedPulley.y}
-                      onChange={() => {}}
+                      onChange={e => {
+                        const value = Number(e.target.value)
+                        const stage = window.Konva.stages[0]
+                        stage.findOne(`#${selectedPulleyId}`).setAttr('y', value)
+                        stage.children[0].draw()
+
+                        setPulleys(pulleys => {
+                          const pulleyIndex = pulleys.findIndex(p => p.id === selectedPulleyId)
+
+                          const pulley = stage.findOne(`#${selectedPulleyId}`)
+                          const pulleyPosition = pulley.getPosition()
+
+                          const nextPulley = stage.findOne(`#${pulley.attrs.nextPulleyId}`)
+                          const nextPulleyPosition = nextPulley.getPosition()
+
+                          const prevPulley = stage.findOne(`#${pulley.attrs.prevPulleyId}`)
+                          const prevPulleyPosition = prevPulley.getPosition()
+
+                          const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
+                          const prevLineTangents = getTangents({
+                            x: prevPulleyPosition.x,
+                            y: prevPulleyPosition.y,
+                            radius: prevPulley.getRadius(),
+                          }, {
+                            x: pulleyPosition.x,
+                            y: pulleyPosition.y,
+                            radius: pulley.getRadius(),
+                          })
+                          prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
+
+                          const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
+                          const nextLineTangents = getTangents({
+                            x: pulleyPosition.x,
+                            y: pulleyPosition.y,
+                            radius: pulley.getRadius(),
+                          }, {
+                            x: nextPulleyPosition.x,
+                            y: nextPulleyPosition.y,
+                            radius: nextPulley.getRadius(),
+                          })
+                          nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
+
+                          window.Konva.stages[0].children[0].draw()
+
+                          return update(pulleys, {
+                            [pulleyIndex]: {
+                              y: {
+                                $set: value,
+                              },
+                            },
+                          })
+                        })
+                      }}
                     />
                   </div>
                 </div>
@@ -86,7 +174,59 @@ export const App = () => {
                       className="form-control"
                       id="inputRadius"
                       value={selectedPulley.radius}
-                      onChange={() => {}}
+                      onChange={e => {
+                        const value = Number(e.target.value)
+                        const stage = window.Konva.stages[0]
+                        stage.findOne(`#${selectedPulleyId}`).setAttr('radius', value)
+                        stage.children[0].draw()
+
+                        setPulleys(pulleys => {
+                          const pulleyIndex = pulleys.findIndex(p => p.id === selectedPulleyId)
+
+                          const pulley = stage.findOne(`#${selectedPulleyId}`)
+                          const pulleyPosition = pulley.getPosition()
+
+                          const nextPulley = stage.findOne(`#${pulley.attrs.nextPulleyId}`)
+                          const nextPulleyPosition = nextPulley.getPosition()
+
+                          const prevPulley = stage.findOne(`#${pulley.attrs.prevPulleyId}`)
+                          const prevPulleyPosition = prevPulley.getPosition()
+
+                          const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
+                          const prevLineTangents = getTangents({
+                            x: prevPulleyPosition.x,
+                            y: prevPulleyPosition.y,
+                            radius: prevPulley.getRadius(),
+                          }, {
+                            x: pulleyPosition.x,
+                            y: pulleyPosition.y,
+                            radius: pulley.getRadius(),
+                          })
+                          prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
+
+                          const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
+                          const nextLineTangents = getTangents({
+                            x: pulleyPosition.x,
+                            y: pulleyPosition.y,
+                            radius: pulley.getRadius(),
+                          }, {
+                            x: nextPulleyPosition.x,
+                            y: nextPulleyPosition.y,
+                            radius: nextPulley.getRadius(),
+                          })
+                          nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
+
+                          window.Konva.stages[0].children[0].draw()
+
+                          return update(pulleys, {
+                            [pulleyIndex]: {
+                              radius: {
+                                $set: value,
+                              },
+                            },
+                          })
+                        })
+                      }}
                     />
                   </div>
                 </div>
@@ -128,7 +268,18 @@ export const App = () => {
             setSelectedPulleyId={id => setSelectedPulleyId(id)}
             pulleys={pulleys}
             dropItem={dropItem}
-            onPulleyDrop={(dropPoint, pulleyIndex) => {
+            onPulleyDrop={(location, partIndex) => {
+              /*setConveyor(conveyor => {
+                const previousPart = partIndex === 0 ? conveyor.parts[conveyor.parts.length - 1] : conveyor.parts[partIndex - 1]
+                const nextPart = partIndex === conveyor.parts.length - 1 ? conveyor.parts[0] : conveyor.parts[partIndex + 1]
+                const newPulley = new Pulley(new Point(location.x, location.y))
+                const firstNewBeltSection = new FreeBeltSection(previousPart, newPulley)
+                const secondNewBeltSection = new FreeBeltSection(newPulley, nextPart)
+                conveyor.parts.splice(partIndex, 1, firstNewBeltSection, newPulley, secondNewBeltSection)
+                return _.cloneDeep(conveyor)
+              })*/
+            }}
+            xonPulleyDrop={(dropPoint, pulleyIndex) => {
               setPulleys(pulleys => update(pulleys, {
                 $splice: [[pulleyIndex + 1, 0, {
                   x: dropPoint.x,
@@ -139,8 +290,10 @@ export const App = () => {
               }))
             }}
             onPulleyMove={(id, x, y) => {
+              const pulleyIndex = pulleys.findIndex(p => p.id === id)
+
               setPulleys(pulleys => update(pulleys, {
-                [id]: {
+                [pulleyIndex]: {
                   x: {
                     $set: x,
                   },
