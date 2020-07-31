@@ -14,7 +14,7 @@ export const ROTATION = {
 }
 
 export const App = () => {
-  const [pulleys, setPulleys] = React.useState(_.range(5).map(n => ({
+  const [pulleys, setPulleys] = React.useState(_.range(3).map(n => ({
     id: uuid(),
     x: Math.round(Math.random() * 1200),
     y: Math.round(Math.random() * 600),
@@ -38,6 +38,10 @@ export const App = () => {
           <div className="sidebar-sticky pt-3">
             {selectedPulleyId && (
               <form>
+                <div className="form-group row">
+                  <div className="col-sm-2">Id:</div>
+                  <div className="col-sm-10">{selectedPulley.id}</div>
+                </div>
                 <div className="form-group row">
                   <label htmlFor="inputX" className="col-sm-2 col-form-label">X:</label>
                   <div className="col-sm-10">
@@ -251,16 +255,17 @@ export const App = () => {
                 })
               }}
             >{dropItem === 'Pulley' ? 'Cancel' : 'Add Pulley'}</button>
-            <button
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => {
-                const stage = window.Konva.stages[0]
-                stage.findOne(`#${selectedPulleyId}`).setAttr('fill', '#eee')
-                setSelectedPulleyId(null)
-                stage.children[0].draw()
-              }}
-              disabled={!selectedPulley}
-            >Deselect</button>
+            {selectedPulley && (
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => {
+                  const stage = window.Konva.stages[0]
+                  stage.findOne(`#${selectedPulleyId}`).setAttr('fill', '#eee')
+                  setSelectedPulleyId(null)
+                  stage.children[0].draw()
+                }}
+              >Deselect</button>
+            )}
           </div>
 
           <Designer
@@ -304,6 +309,27 @@ export const App = () => {
               }))
             }}
           />
+
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">X</th>
+                <th scope="col">Y</th>
+                <th scope="col">Radius</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pulleys.map(pulley => (
+                <tr className={pulley.id === selectedPulleyId ? 'selectedPulley' : ''}>
+                  <th scope="row">{pulley.id}</th>
+                  <td>{pulley.x}</td>
+                  <td>{pulley.y}</td>
+                  <td>{pulley.radius}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
         </main>
       </div>
