@@ -16,10 +16,10 @@ export const ROTATION = {
 export const App = () => {
   const [pulleys, setPulleys] = React.useState(_.range(3).map(n => ({
     id: uuid(),
-    x: Math.round(Math.random() * 1200),
-    y: Math.round(Math.random() * 600),
-    radius: Math.round(Math.random() * 30 + 10),
-    rotation: Math.random() > 1 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
+    x: Math.round(Math.random() * 1100 + 50),
+    y: Math.round(Math.random() * 500 + 50),
+    radius: Math.round(Math.random() * 40 + 10),
+    rotation: Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
   })))
   const [dropItem, setDropItem] = React.useState(null)
   const [selectedPulleyId, setSelectedPulleyId] = React.useState(null)
@@ -62,10 +62,10 @@ export const App = () => {
                           const pulley = stage.findOne(`#${selectedPulleyId}`)
                           const pulleyPosition = pulley.getPosition()
 
-                          const nextPulley = stage.findOne(`#${pulley.attrs.nextPulleyId}`)
+                          const nextPulley = stage.findOne(`#${pulley.attrs.data.nextPulleyId}`)
                           const nextPulleyPosition = nextPulley.getPosition()
 
-                          const prevPulley = stage.findOne(`#${pulley.attrs.prevPulleyId}`)
+                          const prevPulley = stage.findOne(`#${pulley.attrs.data.prevPulleyId}`)
                           const prevPulleyPosition = prevPulley.getPosition()
 
                           const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
@@ -73,10 +73,12 @@ export const App = () => {
                             x: prevPulleyPosition.x,
                             y: prevPulleyPosition.y,
                             radius: prevPulley.getRadius(),
+                            rotation: prevPulley.attrs.data.rotation,
                           }, {
                             x: pulleyPosition.x,
                             y: pulleyPosition.y,
                             radius: pulley.getRadius(),
+                            rotation: pulley.attrs.data.rotation,
                           })
                           prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
 
@@ -85,10 +87,12 @@ export const App = () => {
                             x: pulleyPosition.x,
                             y: pulleyPosition.y,
                             radius: pulley.getRadius(),
+                            rotation: pulley.attrs.data.rotation,
                           }, {
                             x: nextPulleyPosition.x,
                             y: nextPulleyPosition.y,
                             radius: nextPulley.getRadius(),
+                            rotation: nextPulley.attrs.data.rotation,
                           })
                           nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
 
@@ -126,10 +130,10 @@ export const App = () => {
                           const pulley = stage.findOne(`#${selectedPulleyId}`)
                           const pulleyPosition = pulley.getPosition()
 
-                          const nextPulley = stage.findOne(`#${pulley.attrs.nextPulleyId}`)
+                          const nextPulley = stage.findOne(`#${pulley.attrs.data.nextPulleyId}`)
                           const nextPulleyPosition = nextPulley.getPosition()
 
-                          const prevPulley = stage.findOne(`#${pulley.attrs.prevPulleyId}`)
+                          const prevPulley = stage.findOne(`#${pulley.attrs.data.prevPulleyId}`)
                           const prevPulleyPosition = prevPulley.getPosition()
 
                           const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
@@ -137,10 +141,12 @@ export const App = () => {
                             x: prevPulleyPosition.x,
                             y: prevPulleyPosition.y,
                             radius: prevPulley.getRadius(),
+                            rotation: prevPulley.attrs.data.rotation,
                           }, {
                             x: pulleyPosition.x,
                             y: pulleyPosition.y,
                             radius: pulley.getRadius(),
+                            rotation: pulley.attrs.data.rotation,
                           })
                           prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
 
@@ -149,10 +155,12 @@ export const App = () => {
                             x: pulleyPosition.x,
                             y: pulleyPosition.y,
                             radius: pulley.getRadius(),
+                            rotation: pulley.attrs.data.rotation,
                           }, {
                             x: nextPulleyPosition.x,
                             y: nextPulleyPosition.y,
                             radius: nextPulley.getRadius(),
+                            rotation: nextPulley.attrs.data.rotation,
                           })
                           nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
 
@@ -182,45 +190,50 @@ export const App = () => {
                         const value = Number(e.target.value)
                         const stage = window.Konva.stages[0]
                         stage.findOne(`#${selectedPulleyId}`).setAttr('radius', value)
+
+                        /**************/
+
+                        const pulley = stage.findOne(`#${selectedPulleyId}`)
+                        const pulleyPosition = pulley.getPosition()
+
+                        const nextPulley = stage.findOne(`#${pulley.attrs.data.nextPulleyId}`)
+                        const nextPulleyPosition = nextPulley.getPosition()
+
+                        const prevPulley = stage.findOne(`#${pulley.attrs.data.prevPulleyId}`)
+                        const prevPulleyPosition = prevPulley.getPosition()
+
+                        const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
+                        const prevLineTangents = getTangents({
+                          x: prevPulleyPosition.x,
+                          y: prevPulleyPosition.y,
+                          radius: prevPulley.getRadius(),
+                          rotation: prevPulley.attrs.data.rotation,
+                        }, {
+                          x: pulleyPosition.x,
+                          y: pulleyPosition.y,
+                          radius: pulley.getRadius(),
+                          rotation: pulley.attrs.data.rotation,
+                        })
+                        prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
+
+                        const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
+                        const nextLineTangents = getTangents({
+                          x: pulleyPosition.x,
+                          y: pulleyPosition.y,
+                          radius: pulley.getRadius(),
+                          rotation: pulley.attrs.data.rotation,
+                        }, {
+                          x: nextPulleyPosition.x,
+                          y: nextPulleyPosition.y,
+                          radius: nextPulley.getRadius(),
+                          rotation: nextPulley.attrs.data.rotation,
+                        })
+                        nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
+
                         stage.children[0].draw()
 
                         setPulleys(pulleys => {
                           const pulleyIndex = pulleys.findIndex(p => p.id === selectedPulleyId)
-
-                          const pulley = stage.findOne(`#${selectedPulleyId}`)
-                          const pulleyPosition = pulley.getPosition()
-
-                          const nextPulley = stage.findOne(`#${pulley.attrs.nextPulleyId}`)
-                          const nextPulleyPosition = nextPulley.getPosition()
-
-                          const prevPulley = stage.findOne(`#${pulley.attrs.prevPulleyId}`)
-                          const prevPulleyPosition = prevPulley.getPosition()
-
-                          const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
-                          const prevLineTangents = getTangents({
-                            x: prevPulleyPosition.x,
-                            y: prevPulleyPosition.y,
-                            radius: prevPulley.getRadius(),
-                          }, {
-                            x: pulleyPosition.x,
-                            y: pulleyPosition.y,
-                            radius: pulley.getRadius(),
-                          })
-                          prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
-
-                          const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
-                          const nextLineTangents = getTangents({
-                            x: pulleyPosition.x,
-                            y: pulleyPosition.y,
-                            radius: pulley.getRadius(),
-                          }, {
-                            x: nextPulleyPosition.x,
-                            y: nextPulleyPosition.y,
-                            radius: nextPulley.getRadius(),
-                          })
-                          nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
-
-                          window.Konva.stages[0].children[0].draw()
 
                           return update(pulleys, {
                             [pulleyIndex]: {
@@ -321,7 +334,7 @@ export const App = () => {
             </thead>
             <tbody>
               {pulleys.map(pulley => (
-                <tr className={pulley.id === selectedPulleyId ? 'selectedPulley' : ''}>
+                <tr key={pulley.id} className={pulley.id === selectedPulleyId ? 'selectedPulley' : ''}>
                   <th scope="row">{pulley.id}</th>
                   <td>{pulley.x}</td>
                   <td>{pulley.y}</td>

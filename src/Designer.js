@@ -30,7 +30,6 @@ export class Designer extends React.Component {
       const dropIndicator = stage.findOne('#dropIndicator')
       const pulleys = this.props.pulleys
 
-      let closestPulley
       let smallestDistance = Number.MAX_SAFE_INTEGER
       let beltSectionMiddlePoint = {x: 0, y: 0}
 
@@ -44,7 +43,6 @@ export class Designer extends React.Component {
 
         if(distance < smallestDistance) {
           smallestDistance = distance
-          closestPulley = pulley
 
           beltSectionMiddlePoint = {
             x: (tangents.start.x + tangents.end.x) / 2,
@@ -61,15 +59,50 @@ export class Designer extends React.Component {
     }
   }
 
+  onPulleyPositionChange = ({target}) => {
+    const pulley = stage.findOne(`#${target.attrs.id}`)
+    const pulleyPosition = pulley.getPosition()
+
+    const nextPulley = stage.findOne(`#${target.attrs.data.nextPulleyId}`)
+    const nextPulleyPosition = nextPulley.getPosition()
+
+    const prevPulley = stage.findOne(`#${target.attrs.data.prevPulleyId}`)
+    const prevPulleyPosition = prevPulley.getPosition()
+
+    const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
+    const prevLineTangents = getTangents({
+      x: prevPulleyPosition.x,
+      y: prevPulleyPosition.y,
+      radius: prevPulley.getRadius(),
+      rotation: prevPulley.attrs.data.rotation,
+    }, {
+      x: pulleyPosition.x,
+      y: pulleyPosition.y,
+      radius: pulley.getRadius(),
+      rotation: pulley.attrs.data.rotation,
+    })
+    prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
+
+    const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
+    const nextLineTangents = getTangents({
+      x: pulleyPosition.x,
+      y: pulleyPosition.y,
+      radius: pulley.getRadius(),
+      rotation: pulley.attrs.data.rotation,
+    }, {
+      x: nextPulleyPosition.x,
+      y: nextPulleyPosition.y,
+      radius: nextPulley.getRadius(),
+      rotation: nextPulley.attrs.data.rotation,
+    })
+    nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
+
+    layer.draw()
+    this.props.onPulleyMove(target.attrs.id, Math.round(pulleyPosition.x), Math.round(pulleyPosition.y))
+  }
+
   componentDidMount() {
-    const {
-      pulleys,
-      selectedPulleyId,
-      setSelectedPulleyId,
-      onPulleyMove,
-      dropItem,
-      setSelectedPartIndex,
-    } = this.props
+    const {pulleys} = this.props
 
     stage = new Konva.Stage({
       container: 'Designer',
@@ -86,16 +119,6 @@ export class Designer extends React.Component {
       }
     })
 
-    /*stage.on('click', () => {
-     if(selectedPulleyId !== null) {
-     const prevSelectedPulley = stage.findOne(`#${selectedPulleyId}`)
-     prevSelectedPulley.setAttr('fill', pulleyFillColor)
-     selectedPulleyId = null
-
-     layer.draw()
-     }
-     })*/
-
     stage.on('mousemove', this.onStageMouseMove)
 
     pulleys.forEach((pulley, pulleyIndex) => {
@@ -104,8 +127,11 @@ export class Designer extends React.Component {
       const tangents = getTangents(pulley, nextPulley)
 
       const pulleyGeometry = new Konva.Circle({
-        nextPulleyId: nextPulley.id,
-        prevPulleyId: prevPulley.id,
+        data: {
+          nextPulleyId: nextPulley.id,
+          prevPulleyId: prevPulley.id,
+          rotation: pulley.rotation,
+        },
         id: pulley.id,
         x: pulley.x,
         y: pulley.y,
@@ -118,43 +144,7 @@ export class Designer extends React.Component {
 
       pulleyGeometry.on('click', this.onPulleyClick)
 
-      pulleyGeometry.on('dragend', ({target}) => {
-        const pulley = stage.findOne(`#${target.attrs.id}`)
-        const pulleyPosition = pulley.getPosition()
-
-        const nextPulley = stage.findOne(`#${target.attrs.nextPulleyId}`)
-        const nextPulleyPosition = nextPulley.getPosition()
-
-        const prevPulley = stage.findOne(`#${target.attrs.prevPulleyId}`)
-        const prevPulleyPosition = prevPulley.getPosition()
-
-        const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
-        const prevLineTangents = getTangents({
-          x: prevPulleyPosition.x,
-          y: prevPulleyPosition.y,
-          radius: prevPulley.getRadius(),
-        }, {
-          x: pulleyPosition.x,
-          y: pulleyPosition.y,
-          radius: pulley.getRadius(),
-        })
-        prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
-
-        const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
-        const nextLineTangents = getTangents({
-          x: pulleyPosition.x,
-          y: pulleyPosition.y,
-          radius: pulley.getRadius(),
-        }, {
-          x: nextPulleyPosition.x,
-          y: nextPulleyPosition.y,
-          radius: nextPulley.getRadius(),
-        })
-        nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
-
-        layer.draw()
-        this.props.onPulleyMove(target.attrs.id, Math.round(pulleyPosition.x), Math.round(pulleyPosition.y))
-      })
+      pulleyGeometry.on('dragend', this.onPulleyPositionChange)
 
       const line = new Konva.Line({
         id: `belt_${pulley.id}`,
