@@ -1,11 +1,21 @@
 import React from 'react'
 import Konva from 'konva'
+import PropTypes from 'prop-types'
 
-import {getTangents, getDistanceOfSectionAndPoint} from './calculator'
+import {getTangents, getDistanceOfSectionAndPoint} from '../utils/calculator'
+import {designer} from '../designer'
+import {Pulley} from '../utils/types'
 
 let stage, layer
 
 export class Designer extends React.Component {
+  static propTypes = {
+    pulleys: PropTypes.arrayOf(PropTypes.shape(Pulley)).isRequired,
+    dropItem: PropTypes.bool.isRequired,
+    selectedPulleyId: PropTypes.string,
+    onPulleyMove: PropTypes.func.isRequired,
+  }
+
   state = {
     pulleyDropPoint: {x: 0, y: 0},
     selectedPulleyIndex: null,
@@ -60,44 +70,12 @@ export class Designer extends React.Component {
   }
 
   onPulleyPositionChange = ({target}) => {
-    const pulley = stage.findOne(`#${target.attrs.id}`)
+    const id = target.attrs.id
+    const pulley = stage.findOne(`#${id}`)
     const pulleyPosition = pulley.getPosition()
 
-    const nextPulley = stage.findOne(`#${target.attrs.data.nextPulleyId}`)
-    const nextPulleyPosition = nextPulley.getPosition()
+    designer.drawBeltsAfterPulleyPositionChange(id)
 
-    const prevPulley = stage.findOne(`#${target.attrs.data.prevPulleyId}`)
-    const prevPulleyPosition = prevPulley.getPosition()
-
-    const prevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
-    const prevLineTangents = getTangents({
-      x: prevPulleyPosition.x,
-      y: prevPulleyPosition.y,
-      radius: prevPulley.getRadius(),
-      rotation: prevPulley.attrs.data.rotation,
-    }, {
-      x: pulleyPosition.x,
-      y: pulleyPosition.y,
-      radius: pulley.getRadius(),
-      rotation: pulley.attrs.data.rotation,
-    })
-    prevLine.setAttr('points', [prevLineTangents.start.x, prevLineTangents.start.y, prevLineTangents.end.x, prevLineTangents.end.y,])
-
-    const nextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
-    const nextLineTangents = getTangents({
-      x: pulleyPosition.x,
-      y: pulleyPosition.y,
-      radius: pulley.getRadius(),
-      rotation: pulley.attrs.data.rotation,
-    }, {
-      x: nextPulleyPosition.x,
-      y: nextPulleyPosition.y,
-      radius: nextPulley.getRadius(),
-      rotation: nextPulley.attrs.data.rotation,
-    })
-    nextLine.setAttr('points', [nextLineTangents.start.x, nextLineTangents.start.y, nextLineTangents.end.x, nextLineTangents.end.y,])
-
-    layer.draw()
     this.props.onPulleyMove(target.attrs.id, Math.round(pulleyPosition.x), Math.round(pulleyPosition.y))
   }
 

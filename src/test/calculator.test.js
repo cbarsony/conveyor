@@ -1,10 +1,10 @@
-import {ROTATION} from './App'
+import {ROTATION} from '../utils/types'
 import {
   getDistanceOfTwoPoints,
   getAngleOfTwoPoints,
   getTangents,
   getDistanceOfSectionAndPoint,
-} from './calculator'
+} from '../utils/calculator'
 
 it('getDistanceOfTwoPoints', () => {
   [
