@@ -330,6 +330,88 @@ export class App extends React.Component {
     }))
   }
 
+  onRotationChange = rotation => {
+    const pulley = stage.findOne(`#${this.state.selectedPulleyId}`)
+    const prevPulley = stage.findOne(`#${pulley.attrs.data.prevPulleyId}`)
+    const nextPulley = stage.findOne(`#${pulley.attrs.data.nextPulleyId}`)
+
+    const prevPulleyPosition = prevPulley.getPosition()
+    const pulleyPosition = pulley.getPosition()
+    const nextPulleyPosition = nextPulley.getPosition()
+
+    pulley.attrs.data.rotation = rotation
+
+    const oldNextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
+    const oldPrevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
+
+    oldNextLine.destroy()
+    oldPrevLine.destroy()
+
+    const prevLineTangents = getTangents({
+      x: prevPulleyPosition.x,
+      y: prevPulleyPosition.y,
+      radius: prevPulley.getRadius(),
+      rotation: prevPulley.attrs.data.rotation,
+    }, {
+      x: pulleyPosition.x,
+      y: pulleyPosition.y,
+      radius: pulley.getRadius(),
+      rotation: pulley.attrs.data.rotation,
+    })
+
+    const nextLineTangents = getTangents({
+      x: pulleyPosition.x,
+      y: pulleyPosition.y,
+      radius: pulley.getRadius(),
+      rotation: pulley.attrs.data.rotation,
+    }, {
+      x: nextPulleyPosition.x,
+      y: nextPulleyPosition.y,
+      radius: nextPulley.getRadius(),
+      rotation: nextPulley.attrs.data.rotation,
+    })
+
+    const prevLine = new Konva.Line({
+      id: `belt_${prevPulley.attrs.id}`,
+      points: [
+        prevLineTangents.start.x,
+        prevLineTangents.start.y,
+        prevLineTangents.end.x,
+        prevLineTangents.end.y,
+      ],
+      stroke: '#888',
+      shadowForStrokeEnabled: false,
+    })
+
+    const nextLine = new Konva.Line({
+      id: `belt_${pulley.attrs.id}`,
+      points: [
+        nextLineTangents.start.x,
+        nextLineTangents.start.y,
+        nextLineTangents.end.x,
+        nextLineTangents.end.y,
+      ],
+      stroke: '#888',
+      shadowForStrokeEnabled: false,
+    })
+
+    layer.add(prevLine)
+    layer.add(nextLine)
+    layer.draw()
+
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
+
+    this.setState(state => update(state, {
+      pulleys: {
+        [pulleyIndex]: {
+          rotation: {
+            $set: rotation,
+          },
+        },
+      },
+    }))
+  }
+
   /*CALLBACKS END*/
 
   componentDidMount() {
@@ -412,9 +494,10 @@ export class App extends React.Component {
         <div id="Content" className="container-fluid row">
 
           <Sidebar
-            selectedPulley={selectedPulley}
+            pulley={selectedPulley}
             onPulleyAttributeChange={this.onPulleyAttributeChange}
             onDeletePulley={this.onDeletePulley}
+            onRotationChange={this.onRotationChange}
           />
 
           <main role="main" className="col-md-9 ml-sm-auto col-lg-10 px-md-4">
