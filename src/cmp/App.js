@@ -40,18 +40,6 @@ export const App = () => {
     stage.children[0].draw()
   }
 
-  /*const onPulleyDrop = (location, partIndex) => {
-    setConveyor(conveyor => {
-      const previousPart = partIndex === 0 ? conveyor.parts[conveyor.parts.length - 1] : conveyor.parts[partIndex - 1]
-      const nextPart = partIndex === conveyor.parts.length - 1 ? conveyor.parts[0] : conveyor.parts[partIndex + 1]
-      const newPulley = new Pulley(new Point(location.x, location.y))
-      const firstNewBeltSection = new FreeBeltSection(previousPart, newPulley)
-      const secondNewBeltSection = new FreeBeltSection(newPulley, nextPart)
-      conveyor.parts.splice(partIndex, 1, firstNewBeltSection, newPulley, secondNewBeltSection)
-      return _.cloneDeep(conveyor)
-    })
-  }*/
-
   const onPulleyDrop = (id, dropPoint) => {
     const pulleyIndex = pulleys.findIndex(p => p.id === id)
 
