@@ -1,25 +1,17 @@
 import React from 'react'
-import update from 'immutability-helper'
 import PropTypes from 'prop-types'
 
 import {Pulley} from '../utils/types'
 import {designer} from '../designer'
 
-export const Sidebar = ({pulleys, selectedPulley, setPulleys}) => {
+export const Sidebar = ({selectedPulley, onPulleyAttributeChange, onDeletePulley}) => {
   const onInputChange = (e, attribute) => {
     const value = Number(e.target.value)
 
+    //TODO: refactor!
     designer.changePulleyAttribute(selectedPulley.id, attribute, value)
 
-    const pulleyIndex = pulleys.findIndex(p => p.id === selectedPulley.id)
-
-    setPulleys(pulleys => update(pulleys, {
-      [pulleyIndex]: {
-        [attribute]: {
-          $set: value,
-        },
-      },
-    }))
+    onPulleyAttributeChange(attribute, value)
   }
 
   return (
@@ -70,7 +62,11 @@ export const Sidebar = ({pulleys, selectedPulley, setPulleys}) => {
             <div className="form-group row">
               <div className="col-sm-2"></div>
               <div className="col-sm-10">
-                <button type="button" className="btn btn-sm btn-outline-secondary">Delete Pulley</button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={onDeletePulley}
+                >Delete Pulley</button>
               </div>
             </div>
           </form>
@@ -81,7 +77,7 @@ export const Sidebar = ({pulleys, selectedPulley, setPulleys}) => {
 }
 
 Sidebar.propTypes = {
-  pulleys: PropTypes.arrayOf(PropTypes.shape(Pulley)).isRequired,
   selectedPulley: PropTypes.shape(Pulley),
-  setPulleys: PropTypes.func.isRequired,
+  onPulleyAttributeChange: PropTypes.func.isRequired,
+  onDeletePulley: PropTypes.func.isRequired,
 }
