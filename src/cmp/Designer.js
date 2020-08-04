@@ -2,9 +2,11 @@ import React from 'react'
 import Konva from 'konva'
 import PropTypes from 'prop-types'
 
+import {uuid} from '../utils/uuid'
 import {getTangents, getDistanceOfSectionAndPoint} from '../utils/calculator'
 import {designer} from '../designer'
 import {Pulley} from '../utils/types'
+import {ROTATION} from '../utils/types'
 
 let stage, layer
 
@@ -14,25 +16,12 @@ export class Designer extends React.Component {
     dropItem: PropTypes.bool.isRequired,
     selectedPulleyId: PropTypes.string,
     onPulleyMove: PropTypes.func.isRequired,
+    onPulleyDrop: PropTypes.func.isRequired,
   }
 
   state = {
     pulleyDropPoint: {x: 0, y: 0},
-    selectedPulleyIndex: null,
-  }
-
-  onPulleyClick = ({target}) => {
-    stage.find('Circle').forEach(circle => {
-      if(circle.attrs.id !== target.attrs.id) {
-        circle.setAttr('fill', '#eee')
-      }
-    })
-
-    const selectedPulley = stage.findOne(`#${target.attrs.id}`)
-    selectedPulley.setAttr('fill', '#ff9089')
-
-    layer.draw()
-    this.props.setSelectedPulleyId(target.attrs.id)
+    pulleyIdToDropAfter: null,
   }
 
   onStageMouseMove = ({evt}) => {
@@ -41,7 +30,8 @@ export class Designer extends React.Component {
       const pulleys = this.props.pulleys
 
       let smallestDistance = Number.MAX_SAFE_INTEGER
-      let beltSectionMiddlePoint = {x: 0, y: 0}
+      let pulleyDropPoint = {x: 0, y: 0}
+      let pulleyIdToDropAfter = null
 
       pulleys.forEach((pulley, pulleyIndex) => {
         const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
@@ -53,8 +43,9 @@ export class Designer extends React.Component {
 
         if(distance < smallestDistance) {
           smallestDistance = distance
+          pulleyIdToDropAfter = pulley.id
 
-          beltSectionMiddlePoint = {
+          pulleyDropPoint = {
             x: (tangents.start.x + tangents.end.x) / 2,
             y: (tangents.start.y + tangents.end.y) / 2,
           }
@@ -62,11 +53,140 @@ export class Designer extends React.Component {
       })
 
       dropIndicator.setAttr('opacity', 1)
-      dropIndicator.setAttr('x', beltSectionMiddlePoint.x)
-      dropIndicator.setAttr('y', beltSectionMiddlePoint.y)
+      dropIndicator.setAttr('x', pulleyDropPoint.x)
+      dropIndicator.setAttr('y', pulleyDropPoint.y)
 
       layer.draw()
+
+      this.setState({
+        pulleyDropPoint,
+        pulleyIdToDropAfter,
+      })
     }
+  }
+
+  onStageMouseLeave = () => {
+    if(this.props.dropItem) {
+      const dropIndicator = stage.findOne('#dropIndicator')
+      dropIndicator.setAttr('opacity', 0)
+      layer.draw()
+    }
+  }
+
+  onStageMouseClick = () => {
+    if(this.props.dropItem) {
+      // const newPulleyId = designer.dropPulley(this.state.pulleyIdToDropAfter, this.state.pulleyDropPoint)
+      const id = this.state.pulleyIdToDropAfter
+      const dropPoint = this.state.pulleyDropPoint
+
+      const stage = window.Konva.stages[0]
+      const oldBelt = stage.findOne(`#belt_${id}`)
+      const prevPulley = stage.findOne(`#${id}`)
+      const nextPulley = stage.findOne(`#${prevPulley.attrs.data.nextPulleyId}`)
+      const newPulleyId = uuid()
+
+      const newPulley = new Konva.Circle({
+        data: {
+          nextPulleyId: prevPulley.attrs.id,
+          prevPulleyId: prevPulley.attrs.data.nextPulleyId,
+          rotation: ROTATION.CLOCKWISE,
+        },
+        id: newPulleyId,
+        x: dropPoint.x,
+        y: dropPoint.y,
+        radius: 20,
+        fill: '#eee',
+        stroke: '#888',
+        shadowForStrokeEnabled: false,
+        draggable: true,
+      }).on('click', this.onPulleyClick)
+        .on('dragend', this.onPulleyPositionChange)
+
+      const prevPulleyPosition = prevPulley.getPosition()
+      const newPulleyPosition = newPulley.getPosition()
+      const nextPulleyPosition = nextPulley.getPosition()
+
+      const prevLineTangents = getTangents({
+        x: prevPulleyPosition.x,
+        y: prevPulleyPosition.y,
+        radius: prevPulley.getRadius(),
+        rotation: prevPulley.attrs.data.rotation,
+      }, {
+        x: newPulleyPosition.x,
+        y: newPulleyPosition.y,
+        radius: newPulley.getRadius(),
+        rotation: newPulley.attrs.data.rotation,
+      })
+
+      const nextLineTangents = getTangents({
+        x: newPulleyPosition.x,
+        y: newPulleyPosition.y,
+        radius: newPulley.getRadius(),
+        rotation: newPulley.attrs.data.rotation,
+      }, {
+        x: nextPulleyPosition.x,
+        y: nextPulleyPosition.y,
+        radius: nextPulley.getRadius(),
+        rotation: nextPulley.attrs.data.rotation,
+      })
+
+      const prevLine = new Konva.Line({
+        id: `belt_${prevPulley.attrs.id}`,
+        points: [
+          prevLineTangents.start.x,
+          prevLineTangents.start.y,
+          prevLineTangents.end.x,
+          prevLineTangents.end.y,
+        ],
+        stroke: '#888',
+        shadowForStrokeEnabled: false,
+      })
+
+      const nextLine = new Konva.Line({
+        id: `belt_${newPulley.attrs.id}`,
+        points: [
+          nextLineTangents.start.x,
+          nextLineTangents.start.y,
+          nextLineTangents.end.x,
+          nextLineTangents.end.y,
+        ],
+        stroke: '#888',
+        shadowForStrokeEnabled: false,
+      })
+
+      oldBelt.destroy()
+
+      stage.children[0].add(newPulley)
+      stage.children[0].add(prevLine)
+      stage.children[0].add(nextLine)
+      stage.children[0].draw()
+
+      //
+      this.props.onPulleyDrop(newPulleyId, this.state.pulleyDropPoint)
+
+      this.setState({
+        pulleyDropPoint: {x: 0, y: 0},
+        pulleyIdToDropAfter: null,
+      })
+    }
+  }
+
+  onPulleyClick = ({target}) => {
+    if(this.props.dropItem) {
+      return
+    }
+
+    stage.find('Circle').forEach(circle => {
+      if(circle.attrs.id !== target.attrs.id) {
+        circle.setAttr('fill', '#eee')
+      }
+    })
+
+    const selectedPulley = stage.findOne(`#${target.attrs.id}`)
+    selectedPulley.setAttr('fill', '#ff9089')
+
+    layer.draw()
+    this.props.setSelectedPulleyId(target.attrs.id)
   }
 
   onPulleyPositionChange = ({target}) => {
@@ -89,15 +209,10 @@ export class Designer extends React.Component {
     })
     layer = new Konva.Layer()
 
-    stage.on('mouseleave', () => {
-      if(this.props.dropItem) {
-        const dropIndicator = stage.findOne('#dropIndicator')
-        dropIndicator.setAttr('opacity', 0)
-        layer.draw()
-      }
-    })
-
-    stage.on('mousemove', this.onStageMouseMove)
+    stage
+      .on('mouseleave', this.onStageMouseLeave)
+      .on('mousemove', this.onStageMouseMove)
+      .on('click', this.onStageMouseClick)
 
     pulleys.forEach((pulley, pulleyIndex) => {
       const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
@@ -118,11 +233,8 @@ export class Designer extends React.Component {
         stroke: '#888',
         shadowForStrokeEnabled: false,
         draggable: true,
-      })
-
-      pulleyGeometry.on('click', this.onPulleyClick)
-
-      pulleyGeometry.on('dragend', this.onPulleyPositionChange)
+      }).on('click', this.onPulleyClick)
+        .on('dragend', this.onPulleyPositionChange)
 
       const line = new Konva.Line({
         id: `belt_${pulley.id}`,

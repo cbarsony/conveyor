@@ -11,7 +11,7 @@ import {uuid} from '../utils/uuid'
 import {ROTATION} from '../utils/types'
 
 export const App = () => {
-  const [pulleys, setPulleys] = React.useState(_.range(3).map(n => ({
+  const [pulleys, setPulleys] = React.useState(_.range(2).map(n => ({
     id: uuid(),
     x: Math.round(Math.random() * 1100 + 50),
     y: Math.round(Math.random() * 500 + 50),
@@ -40,8 +40,7 @@ export const App = () => {
     stage.children[0].draw()
   }
 
-/*
-  const onPulleyDrop = (location, partIndex) => {
+  /*const onPulleyDrop = (location, partIndex) => {
     setConveyor(conveyor => {
       const previousPart = partIndex === 0 ? conveyor.parts[conveyor.parts.length - 1] : conveyor.parts[partIndex - 1]
       const nextPart = partIndex === conveyor.parts.length - 1 ? conveyor.parts[0] : conveyor.parts[partIndex + 1]
@@ -51,19 +50,21 @@ export const App = () => {
       conveyor.parts.splice(partIndex, 1, firstNewBeltSection, newPulley, secondNewBeltSection)
       return _.cloneDeep(conveyor)
     })
-  }
-*/
+  }*/
 
-  /*const xonPulleyDrop = (dropPoint, pulleyIndex) => {
+  const onPulleyDrop = (id, dropPoint) => {
+    const pulleyIndex = pulleys.findIndex(p => p.id === id)
+
     setPulleys(pulleys => update(pulleys, {
       $splice: [[pulleyIndex + 1, 0, {
+        id,
         x: dropPoint.x,
         y: dropPoint.y,
         radius: 20,
         rotation: ROTATION.CLOCKWISE,
       }]]
     }))
-  }*/
+  }
 
   const onPulleyMove = (id, x, y) => {
     const pulleyIndex = pulleys.findIndex(p => p.id === id)
@@ -113,8 +114,7 @@ export const App = () => {
             setSelectedPulleyId={setSelectedPulleyId}
             pulleys={pulleys}
             dropItem={!!dropItem}
-            // onPulleyDrop={onPulleyDrop}
-            // xonPulleyDrop={xonPulleyDrop}
+            onPulleyDrop={onPulleyDrop}
             onPulleyMove={onPulleyMove}
           />
 
