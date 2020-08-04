@@ -67,6 +67,12 @@ export const Sidebar = ({pulleys, selectedPulley, setPulleys}) => {
                 />
               </div>
             </div>
+            <div className="form-group row">
+              <div className="col-sm-2"></div>
+              <div className="col-sm-10">
+                <button type="button" className="btn btn-sm btn-outline-secondary">Delete Pulley</button>
+              </div>
+            </div>
           </form>
         )}
       </div>
