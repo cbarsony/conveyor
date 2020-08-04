@@ -34,8 +34,21 @@ export class Designer extends React.Component {
       let pulleyIdToDropAfter = null
 
       pulleys.forEach((pulley, pulleyIndex) => {
-        const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
-        const tangents = getTangents(pulley, nextPulley)
+        // const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
+        const pulleyGeometry = stage.findOne(`#${pulley.id}`)
+        const nextPulleyGeometry = stage.findOne(`#${pulleyGeometry.attrs.data.nextPulleyId}`)
+
+        const tangents = getTangents({
+          x: pulleyGeometry.getPosition().x,
+          y: pulleyGeometry.getPosition().y,
+          radius: pulleyGeometry.getRadius(),
+          rotation: pulleyGeometry.attrs.data.rotation,
+        }, {
+          x: nextPulleyGeometry.getPosition().x,
+          y: nextPulleyGeometry.getPosition().y,
+          radius: nextPulleyGeometry.getRadius(),
+          rotation: nextPulleyGeometry.attrs.data.rotation,
+        })
         const distance = getDistanceOfSectionAndPoint([
           {x: tangents.start.x, y: tangents.start.y},
           {x: tangents.end.x, y: tangents.end.y},
