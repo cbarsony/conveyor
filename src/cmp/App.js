@@ -98,8 +98,7 @@ export class App extends React.Component {
       let pulleyDropPoint = {x: 0, y: 0}
       let pulleyIdToDropAfter = null
 
-      pulleys.forEach((pulley, pulleyIndex) => {
-        // const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
+      pulleys.forEach(pulley => {
         const pulleyGeometry = stage.findOne(`#${pulley.id}`)
         const nextPulleyGeometry = stage.findOne(`#${pulleyGeometry.attrs.data.nextPulleyId}`)
 
@@ -124,8 +123,8 @@ export class App extends React.Component {
           pulleyIdToDropAfter = pulley.id
 
           pulleyDropPoint = {
-            x: (tangents.start.x + tangents.end.x) / 2,
-            y: (tangents.start.y + tangents.end.y) / 2,
+            x: Math.round((tangents.start.x + tangents.end.x) / 2),
+            y: Math.round((tangents.start.y + tangents.end.y) / 2),
           }
         }
       })
@@ -278,6 +277,10 @@ export class App extends React.Component {
   }
 
   onDeletePulley = () => {
+    if(this.state.pulleys.length === 2) {
+      alert(`You can't delete more pulleys`)
+      return
+    }
     const pulley = stage.findOne(`#${this.state.selectedPulleyId}`)
     const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
     const prevPulley = stage.findOne(`#${pulley.attrs.data.prevPulleyId}`)
