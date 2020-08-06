@@ -1,494 +1,28 @@
 import React from 'react'
-import update from 'immutability-helper'
 import _ from 'lodash'
-import Konva from 'konva'
+import update from 'immutability-helper'
 
-import {designer} from '../designer'
 import {Navbar} from './Navbar'
 import {Sidebar} from './Sidebar'
+import {Designer} from './Designer'
 import {DataTable} from './DataTable'
 import {Footer} from './Footer'
 import {uuid} from '../utils/uuid'
 import {ROTATION} from '../utils/types'
 import {getTangents, getDistanceOfSectionAndPoint} from '../utils/calculator'
 
-let stage, layer
+let pulleyIdCounter = 0
+let beltIdCounter = 0
 
 export class App extends React.Component {
   state = {
-    pulleys: _.range(2).map(n => ({
-      id: uuid(),
-      x: Math.round(Math.random() * 1100 + 50),
-      y: Math.round(Math.random() * 500 + 50),
-      radius: Math.round(Math.random() * 40 + 10),
-      rotation: Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
-    })),
+    pulleys: [],
+    beltSections: [],
     dropItem: null,
-    selectedPulleyId: null,
-    pulleyDropPoint: {x: 0, y: 0},
-    pulleyIdToDropAfter: null,
-  }
-
-  /*CALLBACKS*/
-
-  onDropPulleyClick = () => this.setState({dropItem: this.state.dropItem === 'Pulley' ? null : 'Pulley'})
-
-  onDeselectClick = () => {
-    const stage = window.Konva.stages[0]
-    stage.findOne(`#${this.state.selectedPulleyId}`).setAttr('fill', '#eee')
-    this.setState({selectedPulleyId: null})
-    layer.draw()
-  }
-
-  onPulleyDrop = (id, dropPoint) => {
-    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === id)
-
-    this.setState(state => update(state, {
-      pulleys: {
-        $splice: [[pulleyIndex + 1, 0, {
-          id,
-          x: dropPoint.x,
-          y: dropPoint.y,
-          radius: 20,
-          rotation: ROTATION.CLOCKWISE,
-        }]],
-      },
-    }))
-  }
-
-  onPulleyMove = (id, x, y) => {
-    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === id)
-
-    this.setState(state => update(state, {
-      pulleys: {
-        [pulleyIndex]: {
-          x: {
-            $set: x,
-          },
-          y: {
-            $set: y,
-          },
-        },
-      },
-    }))
-  }
-
-  onPulleyAttributeChange = (name, value) => {
-    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
-
-    this.setState(state => update(state, {
-      pulleys: {
-        [pulleyIndex]: {
-          [name]: {
-            $set: value,
-          },
-        },
-      },
-    }))
-  }
-
-  onSelectedPulleyIdChange = id => this.setState({selectedPulleyId: id})
-
-  onStageMouseMove = ({evt}) => {
-    if(this.state.dropItem) {
-      const dropIndicator = stage.findOne('#dropIndicator')
-      const pulleys = this.state.pulleys
-
-      let smallestDistance = Number.MAX_SAFE_INTEGER
-      let pulleyDropPoint = {x: 0, y: 0}
-      let pulleyIdToDropAfter = null
-
-      pulleys.forEach(pulley => {
-        const pulleyGeometry = stage.findOne(`#${pulley.id}`)
-        const nextPulleyGeometry = stage.findOne(`#${pulleyGeometry.attrs.data.nextPulleyId}`)
-
-        const tangents = getTangents({
-          x: pulleyGeometry.getPosition().x,
-          y: pulleyGeometry.getPosition().y,
-          radius: pulleyGeometry.getRadius(),
-          rotation: pulleyGeometry.attrs.data.rotation,
-        }, {
-          x: nextPulleyGeometry.getPosition().x,
-          y: nextPulleyGeometry.getPosition().y,
-          radius: nextPulleyGeometry.getRadius(),
-          rotation: nextPulleyGeometry.attrs.data.rotation,
-        })
-        const distance = getDistanceOfSectionAndPoint([
-          {x: tangents.start.x, y: tangents.start.y},
-          {x: tangents.end.x, y: tangents.end.y},
-        ], {x: evt.layerX, y: evt.layerY})
-
-        if(distance < smallestDistance) {
-          smallestDistance = distance
-          pulleyIdToDropAfter = pulley.id
-
-          pulleyDropPoint = {
-            x: Math.round((tangents.start.x + tangents.end.x) / 2),
-            y: Math.round((tangents.start.y + tangents.end.y) / 2),
-          }
-        }
-      })
-
-      dropIndicator.setAttr('opacity', 1)
-      dropIndicator.setAttr('x', pulleyDropPoint.x)
-      dropIndicator.setAttr('y', pulleyDropPoint.y)
-
-      layer.draw()
-
-      this.setState({
-        pulleyDropPoint,
-        pulleyIdToDropAfter,
-      })
-    }
-  }
-
-  onStageMouseLeave = () => {
-    if(this.state.dropItem) {
-      const dropIndicator = stage.findOne('#dropIndicator')
-      dropIndicator.setAttr('opacity', 0)
-      layer.draw()
-    }
-  }
-
-  onStageMouseClick = () => {
-    if(this.state.dropItem) {
-      const id = this.state.pulleyIdToDropAfter
-      const dropPoint = this.state.pulleyDropPoint
-
-      const stage = window.Konva.stages[0]
-      const oldBelt = stage.findOne(`#belt_${id}`)
-      const prevPulley = stage.findOne(`#${id}`)
-      const nextPulley = stage.findOne(`#${prevPulley.attrs.data.nextPulleyId}`)
-      const newPulleyId = uuid()
-      const newPulley = new Konva.Circle({
-        data: {
-          nextPulleyId: nextPulley.attrs.id,
-          prevPulleyId: prevPulley.attrs.id,
-          rotation: ROTATION.CLOCKWISE,
-        },
-        id: newPulleyId,
-        x: dropPoint.x,
-        y: dropPoint.y,
-        radius: 20,
-        fill: '#eee',
-        stroke: '#888',
-        shadowForStrokeEnabled: false,
-        draggable: true,
-      }).on('click', this.onPulleyClick)
-        .on('dragend', this.onPulleyPositionChange)
-
-      prevPulley.attrs.data.nextPulleyId = newPulleyId
-      nextPulley.attrs.data.prevPulleyId = newPulleyId
-
-      const prevPulleyPosition = prevPulley.getPosition()
-      const newPulleyPosition = newPulley.getPosition()
-      const nextPulleyPosition = nextPulley.getPosition()
-
-      const prevLineTangents = getTangents({
-        x: prevPulleyPosition.x,
-        y: prevPulleyPosition.y,
-        radius: prevPulley.getRadius(),
-        rotation: prevPulley.attrs.data.rotation,
-      }, {
-        x: newPulleyPosition.x,
-        y: newPulleyPosition.y,
-        radius: newPulley.getRadius(),
-        rotation: newPulley.attrs.data.rotation,
-      })
-
-      const nextLineTangents = getTangents({
-        x: newPulleyPosition.x,
-        y: newPulleyPosition.y,
-        radius: newPulley.getRadius(),
-        rotation: newPulley.attrs.data.rotation,
-      }, {
-        x: nextPulleyPosition.x,
-        y: nextPulleyPosition.y,
-        radius: nextPulley.getRadius(),
-        rotation: nextPulley.attrs.data.rotation,
-      })
-
-      const prevLine = new Konva.Line({
-        id: `belt_${prevPulley.attrs.id}`,
-        points: [
-          prevLineTangents.start.x,
-          prevLineTangents.start.y,
-          prevLineTangents.end.x,
-          prevLineTangents.end.y,
-        ],
-        stroke: '#888',
-        shadowForStrokeEnabled: false,
-      })
-
-      const nextLine = new Konva.Line({
-        id: `belt_${newPulley.attrs.id}`,
-        points: [
-          nextLineTangents.start.x,
-          nextLineTangents.start.y,
-          nextLineTangents.end.x,
-          nextLineTangents.end.y,
-        ],
-        stroke: '#888',
-        shadowForStrokeEnabled: false,
-      })
-
-      oldBelt.destroy()
-
-      layer.add(newPulley)
-      layer.add(prevLine)
-      layer.add(nextLine)
-      layer.draw()
-
-      this.onPulleyDrop(newPulleyId, this.state.pulleyDropPoint)
-
-      this.setState({
-        pulleyDropPoint: {x: 0, y: 0},
-        pulleyIdToDropAfter: null,
-      })
-    }
-  }
-
-  onPulleyClick = ({target}) => {
-    if(this.state.dropItem) {
-      return
-    }
-
-    stage.find('Circle').forEach(circle => {
-      if(circle.attrs.id !== target.attrs.id) {
-        circle.setAttr('fill', '#eee')
-      }
-    })
-
-    const selectedPulley = stage.findOne(`#${target.attrs.id}`)
-    selectedPulley.setAttr('fill', '#ff9089')
-
-    layer.draw()
-    this.onSelectedPulleyIdChange(target.attrs.id)
-  }
-
-  onPulleyPositionChange = ({target}) => {
-    const id = target.attrs.id
-    const pulley = stage.findOne(`#${id}`)
-    const pulleyPosition = pulley.getPosition()
-
-    designer.drawBeltsAfterPulleyPositionChange(id)
-
-    this.onPulleyMove(target.attrs.id, Math.round(pulleyPosition.x), Math.round(pulleyPosition.y))
-  }
-
-  onDeletePulley = () => {
-    if(this.state.pulleys.length === 2) {
-      alert(`You can't delete more pulleys`)
-      return
-    }
-    const pulley = stage.findOne(`#${this.state.selectedPulleyId}`)
-    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
-    const prevPulley = stage.findOne(`#${pulley.attrs.data.prevPulleyId}`)
-    const nextPulley = stage.findOne(`#${pulley.attrs.data.nextPulleyId}`)
-
-    const prevPulleyPosition = prevPulley.getPosition()
-    const nextPulleyPosition = nextPulley.getPosition()
-
-    const newTangents = getTangents({
-      x: prevPulleyPosition.x,
-      y: prevPulleyPosition.y,
-      radius: prevPulley.getRadius(),
-      rotation: prevPulley.attrs.data.rotation,
-    }, {
-      x: nextPulleyPosition.x,
-      y: nextPulleyPosition.y,
-      radius: nextPulley.getRadius(),
-      rotation: nextPulley.attrs.data.rotation,
-    })
-
-    const oldNextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
-    const oldPrevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
-
-    oldNextLine.destroy()
-    oldPrevLine.destroy()
-    pulley.destroy()
-
-    const newLine = new Konva.Line({
-      id: `belt_${prevPulley.attrs.id}`,
-      points: [
-        newTangents.start.x,
-        newTangents.start.y,
-        newTangents.end.x,
-        newTangents.end.y,
-      ],
-      stroke: '#888',
-      shadowForStrokeEnabled: false,
-    })
-
-    prevPulley.attrs.data.nextPulleyId = nextPulley.attrs.id
-    nextPulley.attrs.data.prevPulleyId = prevPulley.attrs.id
-
-    layer.add(newLine)
-    layer.draw()
-
-    this.setState(state => update(state, {
-      pulleys: {
-        $splice: [[pulleyIndex, 1]],
-      },
-    }))
-  }
-
-  onRotationChange = rotation => {
-    const pulley = stage.findOne(`#${this.state.selectedPulleyId}`)
-    const prevPulley = stage.findOne(`#${pulley.attrs.data.prevPulleyId}`)
-    const nextPulley = stage.findOne(`#${pulley.attrs.data.nextPulleyId}`)
-
-    const prevPulleyPosition = prevPulley.getPosition()
-    const pulleyPosition = pulley.getPosition()
-    const nextPulleyPosition = nextPulley.getPosition()
-
-    pulley.attrs.data.rotation = rotation
-
-    const oldNextLine = stage.findOne(`#belt_${pulley.attrs.id}`)
-    const oldPrevLine = stage.findOne(`#belt_${prevPulley.attrs.id}`)
-
-    oldNextLine.destroy()
-    oldPrevLine.destroy()
-
-    const prevLineTangents = getTangents({
-      x: prevPulleyPosition.x,
-      y: prevPulleyPosition.y,
-      radius: prevPulley.getRadius(),
-      rotation: prevPulley.attrs.data.rotation,
-    }, {
-      x: pulleyPosition.x,
-      y: pulleyPosition.y,
-      radius: pulley.getRadius(),
-      rotation: pulley.attrs.data.rotation,
-    })
-
-    const nextLineTangents = getTangents({
-      x: pulleyPosition.x,
-      y: pulleyPosition.y,
-      radius: pulley.getRadius(),
-      rotation: pulley.attrs.data.rotation,
-    }, {
-      x: nextPulleyPosition.x,
-      y: nextPulleyPosition.y,
-      radius: nextPulley.getRadius(),
-      rotation: nextPulley.attrs.data.rotation,
-    })
-
-    const prevLine = new Konva.Line({
-      id: `belt_${prevPulley.attrs.id}`,
-      points: [
-        prevLineTangents.start.x,
-        prevLineTangents.start.y,
-        prevLineTangents.end.x,
-        prevLineTangents.end.y,
-      ],
-      stroke: '#888',
-      shadowForStrokeEnabled: false,
-    })
-
-    const nextLine = new Konva.Line({
-      id: `belt_${pulley.attrs.id}`,
-      points: [
-        nextLineTangents.start.x,
-        nextLineTangents.start.y,
-        nextLineTangents.end.x,
-        nextLineTangents.end.y,
-      ],
-      stroke: '#888',
-      shadowForStrokeEnabled: false,
-    })
-
-    layer.add(prevLine)
-    layer.add(nextLine)
-    layer.draw()
-
-    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
-
-    this.setState(state => update(state, {
-      pulleys: {
-        [pulleyIndex]: {
-          rotation: {
-            $set: rotation,
-          },
-        },
-      },
-    }))
-  }
-
-  /*CALLBACKS END*/
-
-  componentDidMount() {
-    const {pulleys} = this.state
-
-    stage = new Konva.Stage({
-      container: 'Designer',
-      width: 1200,
-      height: 600,
-    })
-    layer = new Konva.Layer()
-
-    stage
-      .on('mouseleave', this.onStageMouseLeave)
-      .on('mousemove', this.onStageMouseMove)
-      .on('click', this.onStageMouseClick)
-
-    pulleys.forEach((pulley, pulleyIndex) => {
-      const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
-      const prevPulley = pulleyIndex === 0 ? pulleys[pulleys.length - 1] : pulleys[pulleyIndex - 1]
-      const tangents = getTangents(pulley, nextPulley)
-
-      const pulleyGeometry = new Konva.Circle({
-        data: {
-          nextPulleyId: nextPulley.id,
-          prevPulleyId: prevPulley.id,
-          rotation: pulley.rotation,
-        },
-        id: pulley.id,
-        x: pulley.x,
-        y: pulley.y,
-        radius: pulley.radius,
-        fill: '#eee',
-        stroke: '#888',
-        shadowForStrokeEnabled: false,
-        draggable: true,
-      }).on('click', this.onPulleyClick)
-        .on('dragend', this.onPulleyPositionChange)
-
-      const line = new Konva.Line({
-        id: `belt_${pulley.id}`,
-        points: [
-          tangents.start.x,
-          tangents.start.y,
-          tangents.end.x,
-          tangents.end.y,
-        ],
-        stroke: '#888',
-        shadowForStrokeEnabled: false,
-      })
-
-      layer.add(pulleyGeometry)
-      layer.add(line)
-    })
-
-    const dropIndicator = new Konva.Circle({
-      id: 'dropIndicator',
-      x: 0,
-      y: 0,
-      radius: 20,
-      fill: '#eee',
-      stroke: '#888',
-      shadowForStrokeEnabled: false,
-      opacity: 0,
-    })
-
-    layer.add(dropIndicator)
-    stage.add(layer)
-    layer.draw()
+    dropIndicator: null,
   }
 
   render() {
-    const selectedPulley = this.state.pulleys.find(p => p.id === this.state.selectedPulleyId)
-
     return (
       <React.Fragment>
 
@@ -497,7 +31,7 @@ export class App extends React.Component {
         <div id="Content" className="container-fluid row">
 
           <Sidebar
-            pulley={selectedPulley}
+            pulley={this.state.pulleys.find(p => p.isSelected)}
             onPulleyAttributeChange={this.onPulleyAttributeChange}
             onDeletePulley={this.onDeletePulley}
             onRotationChange={this.onRotationChange}
@@ -508,17 +42,20 @@ export class App extends React.Component {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-secondary mr-2"
-                onClick={this.onDropPulleyClick}
-              >{this.state.dropItem === 'Pulley' ? 'Cancel' : 'Add Pulley'}</button>
-              {selectedPulley && (
-                <button
-                  className="btn btn-sm btn-outline-secondary"
-                  onClick={this.onDeselectClick}
-                >Deselect</button>
-              )}
+                onClick={() => this.onDropPulleyClick('pulley')}
+              >{this.state.dropItem === 'pulley' ? 'Cancel' : 'Add Pulley'}</button>
             </div>
 
-            <div id="Designer"></div>
+            <Designer
+              pulleys={this.state.pulleys}
+              beltSections={this.state.beltSections}
+              dropIndicator={this.state.dropIndicator}
+              onPulleyMove={this.onPulleyMove}
+              onPulleySelect={this.onPulleySelect}
+              onStageMouseMove={this.onStageMouseMove}
+              onStageMouseLeave={this.onStageMouseLeave}
+              onStageClick={this.onStageClick}
+            />
 
             <DataTable
               pulleys={this.state.pulleys}
@@ -533,4 +70,334 @@ export class App extends React.Component {
       </React.Fragment>
     )
   }
+
+  //region Lifecycle
+  componentDidMount() {
+    const pulleys = _.range(2).map(n => ({
+      id: `p${pulleyIdCounter++}`,
+      isSelected: false,
+      x: Math.round(Math.random() * 1100 + 50),
+      y: Math.round(Math.random() * 500 + 50),
+      radius: Math.round(Math.random() * 40 + 10),
+      rotation: Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
+    }))
+
+    const beltSections = pulleys.map((pulley, pulleyIndex) => {
+      const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
+      const tangents = getTangents(pulley, nextPulley)
+
+      return {
+        id: `b${beltIdCounter++}`,
+        pulleyId: pulley.id,
+        nextPulleyId: nextPulley.id,
+        start: tangents.start,
+        end: tangents.end,
+      }
+    })
+
+    this.setState({
+      pulleys,
+      beltSections,
+    })
+  }
+  //endregion
+
+  //region Callbacks
+  onDropPulleyClick = type => this.setState({dropItem: this.state.dropItem ? null : type})
+
+  onPulleyMove = ({target}) => {
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === target.id())
+    const pulley = this.state.pulleys[pulleyIndex]
+    const nextPulleyIndex = pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1
+    const prevPulleyIndex = pulleyIndex === 0 ? this.state.pulleys.length - 1 : pulleyIndex - 1
+
+    const nextPulley = this.state.pulleys[nextPulleyIndex]
+    const prevPulley = this.state.pulleys[prevPulleyIndex]
+
+    const nextBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === pulley.id)
+    const prevBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === prevPulley.id)
+
+    const updatedPulley = _.cloneDeep(pulley)
+    updatedPulley.x = Math.round(target.x())
+    updatedPulley.y = Math.round(target.y())
+
+    const nextTangents = getTangents(updatedPulley, nextPulley)
+    const prevTangents = getTangents(prevPulley, updatedPulley)
+
+    this.setState(state => update(state, {
+      pulleys: {
+        [pulleyIndex]: {
+          x: {
+            $set: updatedPulley.x,
+          },
+          y: {
+            $set: updatedPulley.y,
+          },
+        },
+      },
+      beltSections: {
+        [nextBeltSectionIndex]: {
+          start: {
+            $set: nextTangents.start,
+          },
+          end: {
+            $set: nextTangents.end,
+          },
+        },
+        [prevBeltSectionIndex]: {
+          start: {
+            $set: prevTangents.start,
+          },
+          end: {
+            $set: prevTangents.end,
+          },
+        },
+      },
+    }))
+  }
+
+  onPulleyAttributeChange = (key, value) => {
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.isSelected)
+
+    const pulley = this.state.pulleys[pulleyIndex]
+    const nextPulley = this.state.pulleys[pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1]
+    const prevPulley = this.state.pulleys[pulleyIndex === 0 ? this.state.pulleys.length - 1 : pulleyIndex - 1]
+
+    const nextBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === pulley.id)
+    const prevBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === prevPulley.id)
+
+    const updatedPulley = _.cloneDeep(pulley)
+    updatedPulley[key] = value
+
+    const nextTangents = getTangents(updatedPulley, nextPulley)
+    const prevTangents = getTangents(prevPulley, updatedPulley)
+
+    this.setState(state => update(state, {
+      pulleys: {
+        [pulleyIndex]: {
+          [key]: {
+            $set: value,
+          },
+        },
+      },
+      beltSections: {
+        [nextBeltSectionIndex]: {
+          start: {
+            $set: nextTangents.start,
+          },
+          end: {
+            $set: nextTangents.end,
+          },
+        },
+        [prevBeltSectionIndex]: {
+          start: {
+            $set: prevTangents.start,
+          },
+          end: {
+            $set: prevTangents.end,
+          },
+        },
+      },
+    }))
+  }
+
+  onPulleySelect = ({target}) => {
+    const selectedPulleyIndex = this.state.pulleys.findIndex(p => p.isSelected)
+    const targetPulleyIndex = this.state.pulleys.findIndex(p => p.id === target.id())
+
+    this.setState(state => update(state, {
+      pulleys: {
+        [targetPulleyIndex]: {
+          isSelected: {
+            $set: true,
+          },
+        },
+      },
+    }))
+
+    if(selectedPulleyIndex > -1) {
+      this.setState(state => update(state, {
+        pulleys: {
+          [selectedPulleyIndex]: {
+            isSelected: {
+              $set: false,
+            },
+          },
+        },
+      }))
+    }
+  }
+
+  onStageMouseMove = ({evt}) => {
+    if(!this.state.dropItem) {
+      return
+    }
+
+    let smallestDistance = Number.MAX_SAFE_INTEGER
+    let pulleyDropPoint = {x: 0, y: 0}
+    let pulleyIdToDropAfter = null
+
+    this.state.pulleys.forEach((pulley, pulleyIndex) => {
+      const nextPulley = this.state.pulleys[pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1]
+
+      const tangents = getTangents(pulley, nextPulley)
+      const distance = getDistanceOfSectionAndPoint([
+        {x: tangents.start.x, y: tangents.start.y},
+        {x: tangents.end.x, y: tangents.end.y},
+      ], {x: evt.layerX, y: evt.layerY})
+
+      if(distance < smallestDistance) {
+        smallestDistance = distance
+        pulleyIdToDropAfter = pulley.id
+
+        pulleyDropPoint = {
+          x: Math.round((tangents.start.x + tangents.end.x) / 2),
+          y: Math.round((tangents.start.y + tangents.end.y) / 2),
+        }
+      }
+    })
+
+    this.setState({
+      dropIndicator: {
+        pulleyId: pulleyIdToDropAfter,
+        x: pulleyDropPoint.x,
+        y: pulleyDropPoint.y,
+      },
+    })
+  }
+
+  onStageMouseLeave = () => this.setState({dropIndicator: null})
+
+  onStageClick = () => {
+    if(!this.state.dropItem) {
+      return
+    }
+
+    const prevPulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.dropIndicator.pulleyId)
+
+    const prevPulley = this.state.pulleys[prevPulleyIndex]
+    const nextPulley = this.state.pulleys[prevPulleyIndex === this.state.pulleys.length - 1 ? 0 : prevPulleyIndex + 1]
+    const newPulley = {
+      id: `p${pulleyIdCounter++}`,
+      isSelected: false,
+      x: this.state.dropIndicator.x,
+      y: this.state.dropIndicator.y,
+      radius: 20,
+      rotation: ROTATION.CLOCKWISE,
+    }
+
+    const prevTangents = getTangents(prevPulley, newPulley)
+    const nextTangents = getTangents(newPulley, nextPulley)
+
+    const prevBeltSection = {
+      id: `b${beltIdCounter++}`,
+      pulleyId: prevPulley.id,
+      nextPulleyId: newPulley.id,
+      start: prevTangents.start,
+      end: prevTangents.end,
+    }
+    const nextBeltSection = {
+      id: `b${beltIdCounter++}`,
+      pulleyId: newPulley.id,
+      nextPulleyId: nextPulley.id,
+      start: nextTangents.start,
+      end: nextTangents.end,
+    }
+
+    const oldBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === prevPulley.id)
+
+    this.setState(state => update(state, {
+      pulleys: {
+        $splice: [[prevPulleyIndex + 1, 0, newPulley]],
+      },
+      beltSections: {
+        $splice: [[oldBeltSectionIndex, 1, prevBeltSection, nextBeltSection]],
+      },
+    }))
+  }
+
+  onDeletePulley = () => {
+    if(this.state.pulleys.length <= 2) {
+      alert(`You can't delete more pulleys`)
+      return
+    }
+
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.isSelected)
+    const nextPulleyIndex = pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1
+    const prevPulleyIndex = pulleyIndex === 0 ? this.state.pulleys.length - 1 : pulleyIndex - 1
+
+    const pulley = this.state.pulleys[pulleyIndex]
+    const nextPulley = this.state.pulleys[nextPulleyIndex]
+    const prevPulley = this.state.pulleys[prevPulleyIndex]
+
+    const prevBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === prevPulley.id)
+
+    const tangents = getTangents(prevPulley, nextPulley)
+    const beltSectionsWithoutOlds = this.state.beltSections.filter(b => b.pulleyId !== pulley.id && b.pulleyId !== prevPulley.id)
+
+    beltSectionsWithoutOlds.splice(prevBeltSectionIndex === 0 ? beltSectionsWithoutOlds.length - 1 : prevBeltSectionIndex - 1, 0, {
+      id: uuid(),
+      pulleyId: prevPulley.id,
+      nextPulleyId: nextPulley.id,
+      start: tangents.start,
+      end: tangents.end,
+    })
+
+    this.setState(state => update(state, {
+      pulleys: {
+        $splice: [[pulleyIndex, 1]],
+      },
+      beltSections: {
+        $set: beltSectionsWithoutOlds,
+      },
+    }))
+  }
+
+  onRotationChange = rotation => {
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.isSelected)
+    const nextPulleyIndex = pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1
+    const prevPulleyIndex = pulleyIndex === 0 ? this.state.pulleys.length - 1 : pulleyIndex - 1
+
+    const pulley = this.state.pulleys[pulleyIndex]
+    const nextPulley = this.state.pulleys[nextPulleyIndex]
+    const prevPulley = this.state.pulleys[prevPulleyIndex]
+
+    const nextBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === pulley.id)
+    const prevBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === prevPulley.id)
+
+    const updatedPulley = _.cloneDeep(pulley)
+    updatedPulley.rotation = rotation
+
+    const nextTangents = getTangents(updatedPulley, nextPulley)
+    const prevTangents = getTangents(prevPulley, updatedPulley)
+
+    this.setState(state => update(state, {
+      pulleys: {
+        [pulleyIndex]: {
+          rotation: {
+            $set: rotation,
+          },
+        },
+      },
+      beltSections: {
+        [nextBeltSectionIndex]: {
+          start: {
+            $set: nextTangents.start,
+          },
+          end: {
+            $set: nextTangents.end,
+          },
+        },
+        [prevBeltSectionIndex]: {
+          start: {
+            $set: prevTangents.start,
+          },
+          end: {
+            $set: prevTangents.end,
+          },
+        },
+      },
+    }))
+  }
+  //endregion
 }

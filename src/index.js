@@ -6,7 +6,7 @@ import 'bootstrap/dist/js/bootstrap'
 import 'bootstrap/dist/css/bootstrap.css'
 
 import './index.css'
-import {App} from './cmp2/App'
+import {App} from './cmp/App'
 
 ReactDOM.render(
   <App/>,

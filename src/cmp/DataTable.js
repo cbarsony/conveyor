@@ -1,9 +1,6 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 
-import {Pulley} from '../utils/types'
-
-export const DataTable = ({pulleys, selectedPulleyId}) => (
+export const DataTable = ({pulleys}) => (
   <table className="table table-striped">
     <thead>
     <tr>
@@ -16,7 +13,7 @@ export const DataTable = ({pulleys, selectedPulleyId}) => (
     </thead>
     <tbody>
     {pulleys.map(pulley => (
-      <tr key={pulley.id} className={pulley.id === selectedPulleyId ? 'selectedPulley' : ''}>
+      <tr key={pulley.id} className={pulley.isSelected ? 'selectedPulley' : ''}>
         <th scope="row">{pulley.id}</th>
         <td>{pulley.x}</td>
         <td>{pulley.y}</td>
@@ -27,8 +24,3 @@ export const DataTable = ({pulleys, selectedPulleyId}) => (
     </tbody>
   </table>
 )
-
-DataTable.propTypes = {
-  pulleys: PropTypes.arrayOf(PropTypes.shape(Pulley)).isRequired,
-  selectedPulleyId: PropTypes.string,
-}
