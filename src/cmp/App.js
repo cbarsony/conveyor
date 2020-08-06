@@ -12,7 +12,7 @@ import {
   PointOnConveyor,
   Pulley,
   DrivePulley,
-  ROTATION,
+  // ROTATION,
   PULLEY_TYPE,
 } from '../utils/types'
 import {getTangents, getDistanceOfSectionAndPoint} from '../utils/calculator'
@@ -76,23 +76,18 @@ export class App extends React.Component {
 
   //region Lifecycle
   componentDidMount() {
-    const pulleys = _.range(2).map(n => new Pulley(
+    const pulleys = [
+      new Pulley(`p${pulleyIdCounter++}`, 200, 300),
+      new Pulley(`p${pulleyIdCounter++}`, 1000, 300),
+    ]
+
+    /*const pulleys = _.range(6).map(n => new Pulley(
       `p${pulleyIdCounter++}`,
       Math.round(Math.random() * 1100 + 50),
       Math.round(Math.random() * 500 + 50),
       Math.round(Math.random() * 40 + 10),
       Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE
-    ))
-/*
-    const pulleys = _.range(2).map(n => ({
-      id: `p${pulleyIdCounter++}`,
-      isSelected: false,
-      x: Math.round(Math.random() * 1100 + 50),
-      y: Math.round(Math.random() * 500 + 50),
-      radius: Math.round(Math.random() * 40 + 10),
-      rotation: Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
-    }))
-*/
+    ))*/
 
     const beltSections = pulleys.map((pulley, pulleyIndex) => {
       const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
@@ -346,7 +341,7 @@ export class App extends React.Component {
 
   onDeletePulley = () => {
     if(this.state.pulleys.length <= 2) {
-      alert(`You can't delete more pulleys`)
+      alert(`Can't delete. Minimum object count is 2.`)
       return
     }
 

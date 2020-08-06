@@ -78,6 +78,8 @@ export const Sidebar = ({
                     id="inputRadius"
                     value={pulley.radius}
                     onChange={e => onPulleyAttributeChange('radius', Number(e.target.value))}
+                    min={1}
+                    max={1000}
                   />
                 </div>
               </div>
