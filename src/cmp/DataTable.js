@@ -12,6 +12,7 @@ export const DataTable = ({pulleys}) => (
       <th scope="col">Radius</th>
       <th scope="col">Rotation</th>
       <th scope="col">Type</th>
+      <th scope="col">Drives</th>
     </tr>
     </thead>
     <tbody>
@@ -23,6 +24,7 @@ export const DataTable = ({pulleys}) => (
         <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : pulley.radius}</td>
         <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : pulley.rotation}</td>
         <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? 'POINT' : pulley.type}</td>
+        <td>{pulley.type === PULLEY_TYPE.DRIVE_PULLEY ? pulley.driveCount : '-'}</td>
       </tr>
     ))}
     </tbody>
