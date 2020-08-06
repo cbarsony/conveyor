@@ -6,7 +6,6 @@ import {Navbar} from './Navbar'
 import {Sidebar} from './Sidebar'
 import {Designer} from './Designer'
 import {DataTable} from './DataTable'
-import {Footer} from './Footer'
 import {uuid} from '../utils/uuid'
 import {
   PointOnConveyor,
@@ -68,7 +67,7 @@ export class App extends React.Component {
           </main>
         </div>
 
-        <Footer/>
+        <footer>&copy; 2020 CONVtek. All Rights Reserved.</footer>
 
       </React.Fragment>
     )
@@ -81,7 +80,7 @@ export class App extends React.Component {
       new Pulley(`p${pulleyIdCounter++}`, 1000, 300),
     ]
 
-    /*const pulleys = _.range(6).map(n => new Pulley(
+    /*const pulleys = _.range(7).map(n => new Pulley(
       `p${pulleyIdCounter++}`,
       Math.round(Math.random() * 1100 + 50),
       Math.round(Math.random() * 500 + 50),

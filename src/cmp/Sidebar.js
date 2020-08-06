@@ -123,7 +123,7 @@ export const Sidebar = ({
             <div className="col-sm-9">
               <button
                 type="button"
-                className="btn btn-sm btn-outline-secondary"
+                className="btn btn-sm btn-outline-danger"
                 onClick={onDeletePulley}
               >Delete</button>
             </div>
