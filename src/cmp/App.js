@@ -8,11 +8,17 @@ import {Designer} from './Designer'
 import {DataTable} from './DataTable'
 import {Footer} from './Footer'
 import {uuid} from '../utils/uuid'
-import {ROTATION} from '../utils/types'
+import {
+  PointOnConveyor,
+  Pulley,
+  DrivePulley,
+  ROTATION,
+  PULLEY_TYPE,
+} from '../utils/types'
 import {getTangents, getDistanceOfSectionAndPoint} from '../utils/calculator'
 
-let pulleyIdCounter = 0
-let beltIdCounter = 0
+let pulleyIdCounter = 1
+let beltIdCounter = 1
 
 export class App extends React.Component {
   state = {
@@ -32,24 +38,21 @@ export class App extends React.Component {
 
           <Sidebar
             pulley={this.state.pulleys.find(p => p.isSelected)}
+            dropItem={this.state.dropItem}
             onPulleyAttributeChange={this.onPulleyAttributeChange}
             onDeletePulley={this.onDeletePulley}
             onRotationChange={this.onRotationChange}
+            onTypeChange={this.onTypeChange}
+            onAddPulley={this.onAddPulley}
           />
 
           <main role="main" className="col-md-9 ml-sm-auto col-lg-10 px-md-4">
-            <div className="d-flex flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary mr-2"
-                onClick={() => this.onDropPulleyClick('pulley')}
-              >{this.state.dropItem === 'pulley' ? 'Cancel' : 'Add Pulley'}</button>
-            </div>
 
             <Designer
               pulleys={this.state.pulleys}
               beltSections={this.state.beltSections}
               dropIndicator={this.state.dropIndicator}
+              dropItem={this.state.dropItem}
               onPulleyMove={this.onPulleyMove}
               onPulleySelect={this.onPulleySelect}
               onStageMouseMove={this.onStageMouseMove}
@@ -73,6 +76,14 @@ export class App extends React.Component {
 
   //region Lifecycle
   componentDidMount() {
+    const pulleys = _.range(2).map(n => new Pulley(
+      `p${pulleyIdCounter++}`,
+      Math.round(Math.random() * 1100 + 50),
+      Math.round(Math.random() * 500 + 50),
+      Math.round(Math.random() * 40 + 10),
+      Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE
+    ))
+/*
     const pulleys = _.range(2).map(n => ({
       id: `p${pulleyIdCounter++}`,
       isSelected: false,
@@ -81,6 +92,7 @@ export class App extends React.Component {
       radius: Math.round(Math.random() * 40 + 10),
       rotation: Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE,
     }))
+*/
 
     const beltSections = pulleys.map((pulley, pulleyIndex) => {
       const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
@@ -103,7 +115,14 @@ export class App extends React.Component {
   //endregion
 
   //region Callbacks
-  onDropPulleyClick = type => this.setState({dropItem: this.state.dropItem ? null : type})
+  onAddPulley = type => {
+    if(this.state.dropItem) {
+      this.setState({dropItem: this.state.dropItem === type ? null : type})
+    }
+    else {
+      this.setState({dropItem: type})
+    }
+  }
 
   onPulleyMove = ({target}) => {
     const pulleyIndex = this.state.pulleys.findIndex(p => p.id === target.id())
@@ -274,16 +293,25 @@ export class App extends React.Component {
     }
 
     const prevPulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.dropIndicator.pulleyId)
-
     const prevPulley = this.state.pulleys[prevPulleyIndex]
     const nextPulley = this.state.pulleys[prevPulleyIndex === this.state.pulleys.length - 1 ? 0 : prevPulleyIndex + 1]
-    const newPulley = {
-      id: `p${pulleyIdCounter++}`,
-      isSelected: false,
-      x: this.state.dropIndicator.x,
-      y: this.state.dropIndicator.y,
-      radius: 20,
-      rotation: ROTATION.CLOCKWISE,
+    let newPulley
+
+    switch(this.state.dropItem) {
+      case PULLEY_TYPE.POINT_ON_CONVEYOR:
+        newPulley = new PointOnConveyor(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
+        break
+
+      case PULLEY_TYPE.PULLEY:
+        newPulley = new Pulley(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
+        break
+
+      case PULLEY_TYPE.DRIVE_PULLEY:
+        newPulley = new DrivePulley(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
+        break
+
+      default:
+        throw new Error(`Unknown pulley type ${this.state.dropItem}`)
     }
 
     const prevTangents = getTangents(prevPulley, newPulley)
@@ -377,6 +405,68 @@ export class App extends React.Component {
           rotation: {
             $set: rotation,
           },
+        },
+      },
+      beltSections: {
+        [nextBeltSectionIndex]: {
+          start: {
+            $set: nextTangents.start,
+          },
+          end: {
+            $set: nextTangents.end,
+          },
+        },
+        [prevBeltSectionIndex]: {
+          start: {
+            $set: prevTangents.start,
+          },
+          end: {
+            $set: prevTangents.end,
+          },
+        },
+      },
+    }))
+  }
+
+  onTypeChange = type => {
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.isSelected)
+    const pulley = this.state.pulleys[pulleyIndex]
+    let newPulley
+
+    switch(type) {
+      case PULLEY_TYPE.POINT_ON_CONVEYOR:
+        newPulley = new PointOnConveyor(pulley.id, pulley.x, pulley.y)
+        break
+
+      case PULLEY_TYPE.PULLEY:
+        const pulleyRadius = pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? 20 : pulley.radius
+        newPulley = new Pulley(pulley.id, pulley.x, pulley.y, pulleyRadius, pulley.rotation)
+        break
+
+      case PULLEY_TYPE.DRIVE_PULLEY:
+        const drivePulleyRadius = pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? 20 : pulley.radius
+        newPulley = new DrivePulley(pulley.id, pulley.x, pulley.y, drivePulleyRadius, pulley.rotation)
+        break
+
+      default:
+        throw new Error(`Unknown pulley type ${type}`)
+    }
+
+    newPulley.isSelected = true
+
+    const nextPulley = this.state.pulleys[pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1]
+    const prevPulley = this.state.pulleys[pulleyIndex === 0 ? this.state.pulleys.length - 1 : pulleyIndex - 1]
+
+    const nextBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === newPulley.id)
+    const prevBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === prevPulley.id)
+
+    const nextTangents = getTangents(newPulley, nextPulley)
+    const prevTangents = getTangents(prevPulley, newPulley)
+
+    this.setState(state => update(state, {
+      pulleys: {
+        [pulleyIndex]: {
+          $set: newPulley,
         },
       },
       beltSections: {

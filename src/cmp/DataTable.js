@@ -1,5 +1,7 @@
 import React from 'react'
 
+import {PULLEY_TYPE} from '../utils/types'
+
 export const DataTable = ({pulleys}) => (
   <table className="table table-striped">
     <thead>
@@ -9,6 +11,7 @@ export const DataTable = ({pulleys}) => (
       <th scope="col">Y</th>
       <th scope="col">Radius</th>
       <th scope="col">Rotation</th>
+      <th scope="col">Type</th>
     </tr>
     </thead>
     <tbody>
@@ -17,8 +20,9 @@ export const DataTable = ({pulleys}) => (
         <th scope="row">{pulley.id}</th>
         <td>{pulley.x}</td>
         <td>{pulley.y}</td>
-        <td>{pulley.radius}</td>
-        <td>{pulley.rotation}</td>
+        <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : pulley.radius}</td>
+        <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : pulley.rotation}</td>
+        <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? 'POINT' : pulley.type}</td>
       </tr>
     ))}
     </tbody>

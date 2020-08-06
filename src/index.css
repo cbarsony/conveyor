@@ -86,3 +86,8 @@ input[type=number] {
 .selectedPulley {
   background: #ff9089 !important;
 }
+
+.sidebarAddButton {
+  display: block;
+  margin-bottom: 4px;
+}

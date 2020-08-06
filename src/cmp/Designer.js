@@ -1,10 +1,12 @@
 import React from 'react'
 import _ from 'lodash'
-import {Stage, Layer, Circle, Line} from 'react-konva'
+import {Stage, Layer, Circle, Line, Group} from 'react-konva'
+
+import {PULLEY_TYPE} from '../utils/types'
 
 class Pulley extends React.Component {
   shouldComponentUpdate(newProps) {
-    return !_.isEqual(this.props.pulley, newProps.pulley)
+    return !_.isEqual(this.props, newProps)
   }
 
   render() {
@@ -15,20 +17,50 @@ class Pulley extends React.Component {
     } = this.props
     console.log('render Pulley', pulley.id)
 
-    return (
-      <Circle
-        id={pulley.id}
-        x={pulley.x}
-        y={pulley.y}
-        radius={pulley.radius}
-        fill={pulley.isSelected ? '#ff9089' : '#eee'}
-        stroke="#888"
-        shadowForStrokeEnabled={false}
-        draggable
-        onDragEnd={onMove}
-        onClick={onSelect}
-      />
-    )
+    if(pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR) {
+      return (
+        <Group
+          id={pulley.id}
+          x={pulley.x}
+          y={pulley.y}
+          draggable
+          onDragEnd={onMove}
+          onClick={onSelect}
+        >
+          <Line
+            points={[0, -10, 0, 10]}
+            stroke={pulley.isSelected ? '#ff9089' : '#888'}
+            shadowForStrokeEnabled={false}
+          />
+          <Line
+            points={[-10, 0, 10, 0]}
+            stroke={pulley.isSelected ? '#ff9089' : '#888'}
+            shadowForStrokeEnabled={false}
+          />
+          <Circle
+            id={pulley.id}
+            radius={20}
+            shadowForStrokeEnabled={false}
+          />
+        </Group>
+      )
+    }
+    else {
+      return (
+        <Circle
+          id={pulley.id}
+          x={pulley.x}
+          y={pulley.y}
+          radius={pulley.radius}
+          fill={pulley.type === PULLEY_TYPE.PULLEY ? '#eee' : '#bfdaa1'}
+          stroke={pulley.isSelected ? '#ff9089' : '#888'}
+          shadowForStrokeEnabled={false}
+          draggable
+          onDragEnd={onMove}
+          onClick={onSelect}
+        />
+      )
+    }
   }
 }
 
@@ -38,20 +70,42 @@ class DropIndicator extends React.Component {
   }
 
   render() {
-    const {x, y} = this.props
+    const {x, y, type} = this.props
     console.log('render DropIndicator')
 
-    return (
-      <Circle
-        id="drop-indicator"
-        x={x}
-        y={y}
-        radius={20}
-        fill="#eee"
-        stroke="#888"
-        shadowForStrokeEnabled={false}
-      />
-    )
+    if(type === PULLEY_TYPE.POINT_ON_CONVEYOR) {
+      return (
+        <Group
+          id="drop-indicator"
+          x={x}
+          y={y}
+          shadowForStrokeEnabled={false}
+        >
+          <Line
+            points={[0, -10, 0, 10]}
+            stroke="#888"
+          />
+          <Line
+            points={[-10, 0, 10, 0]}
+            stroke="#888"
+          />
+        </Group>
+      )
+    }
+    else {
+      return (
+        <Circle
+          id="drop-indicator"
+          x={x}
+          y={y}
+          radius={20}
+          fill="#eee"
+          stroke="#888"
+          shadowForStrokeEnabled={false}
+          opacity={0.5}
+        />
+      )
+    }
   }
 }
 
@@ -91,6 +145,7 @@ export class Designer extends React.Component {
     const {
       pulleys,
       beltSections,
+      dropItem,
       dropIndicator,
       onPulleyMove,
       onPulleySelect,
@@ -108,20 +163,6 @@ export class Designer extends React.Component {
         onClick={onStageClick}
       >
         <Layer>
-          {dropIndicator && (
-            <DropIndicator
-              x={dropIndicator.x}
-              y={dropIndicator.y}
-            />
-          )}
-          {pulleys.map(pulley => (
-            <Pulley
-              key={pulley.id}
-              pulley={pulley}
-              onMove={onPulleyMove}
-              onSelect={onPulleySelect}
-            />
-          ))}
           {beltSections.map(beltSection => (
             <BeltSection
               key={beltSection.id}
@@ -130,6 +171,21 @@ export class Designer extends React.Component {
               end={beltSection.end}
             />
           ))}
+          {pulleys.map(pulley => (
+            <Pulley
+              key={pulley.id}
+              pulley={pulley}
+              onMove={onPulleyMove}
+              onSelect={onPulleySelect}
+            />
+          ))}
+          {dropIndicator && (
+            <DropIndicator
+              x={dropIndicator.x}
+              y={dropIndicator.y}
+              type={dropItem}
+            />
+          )}
         </Layer>
       </Stage>
     )
