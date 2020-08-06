@@ -39,3 +39,7 @@ footer {
   display: block;
   margin-bottom: 4px;
 }
+
+.selectedPulley {
+  background: #ff9089 !important;
+}
