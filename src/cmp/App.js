@@ -64,7 +64,7 @@ export class App extends React.Component {
 
             <DataTable
               pulleys={this.state.pulleys}
-              selectedPulleyId={this.state.selectedPulleyId}
+              beltSections={this.state.beltSections}
             />
 
           </main>
@@ -80,9 +80,14 @@ export class App extends React.Component {
   componentDidMount() {
     this.stage = window.Konva.stages[0]
 
-    const pulleys = [
+    /*const pulleys = [
       new Pulley(`p${pulleyIdCounter++}`, 200, 300),
       new Pulley(`p${pulleyIdCounter++}`, 1000, 300),
+    ]*/
+
+    const pulleys = [
+      new Pulley(`p${pulleyIdCounter++}`, 200, 300),
+      new Pulley(`p${pulleyIdCounter++}`, 600, 300, 200),
     ]
 
     /*const pulleys = _.range(7).map(n => new Pulley(
