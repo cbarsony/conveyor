@@ -25,6 +25,7 @@ export class PointOnConveyor {
     this.radius = 1
     this.rotation = ROTATION.CLOCKWISE
     this.type = PULLEY_TYPE.POINT_ON_CONVEYOR
+    this.isSelected = false
   }
 }
 

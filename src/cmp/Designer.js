@@ -113,25 +113,26 @@ class DropIndicator extends React.Component {
   }
 }
 
+//This is a nice one!
 class BeltSection extends React.Component {
   shouldComponentUpdate(newProps) {
     return !_.isEqual(this.props, newProps)
   }
 
   render() {
-    const {id, start, end} = this.props
-    log(`render Belt ${id}`)
+    const {beltSection} = this.props
+    log(`render Belt ${beltSection.id}`)
 
     return (
       <Line
-        id={id}
+        id={beltSection.id}
         points={[
-          start.x,
-          start.y,
-          end.x,
-          end.y,
+          beltSection.start.x,
+          beltSection.start.y,
+          beltSection.end.x,
+          beltSection.end.y,
         ]}
-        stroke="#888"
+        stroke={beltSection.isSelected ? '#ff9089' : "#888"}
         shadowForStrokeEnabled={false}
       />
     )
@@ -172,14 +173,7 @@ export class Designer extends React.Component {
         draggable
       >
         <Layer>
-          {beltSections.map(beltSection => (
-            <BeltSection
-              key={beltSection.id}
-              id={beltSection.id}
-              start={beltSection.start}
-              end={beltSection.end}
-            />
-          ))}
+          {beltSections.map(beltSection => <BeltSection key={beltSection.id} beltSection={beltSection}/>)}
           {pulleys.map(pulley => (
             <Pulley
               key={pulley.id}

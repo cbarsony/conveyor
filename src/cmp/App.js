@@ -103,6 +103,7 @@ export class App extends React.Component {
         nextPulleyId: nextPulley.id,
         start: tangents.start,
         end: tangents.end,
+        isSelected: false,
       }
     })
 
@@ -224,11 +225,29 @@ export class App extends React.Component {
 
   onPulleySelect = ({target}) => {
     const selectedPulleyIndex = this.state.pulleys.findIndex(p => p.isSelected)
-    const targetPulleyIndex = this.state.pulleys.findIndex(p => p.id === target.id())
+    const selectedBeltSectionIndex = this.state.beltSections.findIndex(b => b.isSelected)
 
+    const targetPulleyIndex = this.state.pulleys.findIndex(p => p.id === target.id())
+    const targetBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === target.id())
+    console.log(selectedPulleyIndex, targetPulleyIndex)
+    console.log(selectedBeltSectionIndex, targetBeltSectionIndex)
+
+    if(selectedPulleyIndex !== selectedBeltSectionIndex) {
+      //now I catch the bug!
+      debugger
+    }
+
+    //what's the intention?
     this.setState(state => update(state, {
       pulleys: {
         [targetPulleyIndex]: {
+          isSelected: {
+            $set: true,
+          },
+        },
+      },
+      beltSections: {
+        [targetBeltSectionIndex]: {
           isSelected: {
             $set: true,
           },
@@ -240,6 +259,13 @@ export class App extends React.Component {
       this.setState(state => update(state, {
         pulleys: {
           [selectedPulleyIndex]: {
+            isSelected: {
+              $set: false,
+            },
+          },
+        },
+        beltSections: {
+          [selectedBeltSectionIndex]: {
             isSelected: {
               $set: false,
             },
