@@ -52,11 +52,14 @@ export class App extends React.Component {
               beltSections={this.state.beltSections}
               dropIndicator={this.state.dropIndicator}
               dropItem={this.state.dropItem}
+
               onPulleyMove={this.onPulleyMove}
               onPulleySelect={this.onPulleySelect}
+
               onStageMouseMove={this.onStageMouseMove}
               onStageMouseLeave={this.onStageMouseLeave}
               onStageClick={this.onStageClick}
+              onZoom={this.onZoom}
             />
 
             <DataTable
@@ -75,6 +78,8 @@ export class App extends React.Component {
 
   //region Lifecycle
   componentDidMount() {
+    this.stage = window.Konva.stages[0]
+
     const pulleys = [
       new Pulley(`p${pulleyIdCounter++}`, 200, 300),
       new Pulley(`p${pulleyIdCounter++}`, 1000, 300),
@@ -109,6 +114,9 @@ export class App extends React.Component {
   //endregion
 
   //region Callbacks
+
+  //region Pulley callbacks
+
   onAddPulley = type => {
     if(this.state.dropItem) {
       this.setState({dropItem: this.state.dropItem === type ? null : type})
@@ -239,103 +247,6 @@ export class App extends React.Component {
         },
       }))
     }
-  }
-
-  onStageMouseMove = ({evt}) => {
-    if(!this.state.dropItem) {
-      return
-    }
-
-    let smallestDistance = Number.MAX_SAFE_INTEGER
-    let pulleyDropPoint = {x: 0, y: 0}
-    let pulleyIdToDropAfter = null
-
-    this.state.pulleys.forEach((pulley, pulleyIndex) => {
-      const nextPulley = this.state.pulleys[pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1]
-
-      const tangents = getTangents(pulley, nextPulley)
-      const distance = getDistanceOfSectionAndPoint([
-        {x: tangents.start.x, y: tangents.start.y},
-        {x: tangents.end.x, y: tangents.end.y},
-      ], {x: evt.layerX, y: evt.layerY})
-
-      if(distance < smallestDistance) {
-        smallestDistance = distance
-        pulleyIdToDropAfter = pulley.id
-
-        pulleyDropPoint = {
-          x: Math.round((tangents.start.x + tangents.end.x) / 2),
-          y: Math.round((tangents.start.y + tangents.end.y) / 2),
-        }
-      }
-    })
-
-    this.setState({
-      dropIndicator: {
-        pulleyId: pulleyIdToDropAfter,
-        x: pulleyDropPoint.x,
-        y: pulleyDropPoint.y,
-      },
-    })
-  }
-
-  onStageMouseLeave = () => this.setState({dropIndicator: null})
-
-  onStageClick = () => {
-    if(!this.state.dropItem) {
-      return
-    }
-
-    const prevPulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.dropIndicator.pulleyId)
-    const prevPulley = this.state.pulleys[prevPulleyIndex]
-    const nextPulley = this.state.pulleys[prevPulleyIndex === this.state.pulleys.length - 1 ? 0 : prevPulleyIndex + 1]
-    let newPulley
-
-    switch(this.state.dropItem) {
-      case PULLEY_TYPE.POINT_ON_CONVEYOR:
-        newPulley = new PointOnConveyor(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
-        break
-
-      case PULLEY_TYPE.PULLEY:
-        newPulley = new Pulley(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
-        break
-
-      case PULLEY_TYPE.DRIVE_PULLEY:
-        newPulley = new DrivePulley(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
-        break
-
-      default:
-        throw new Error(`Unknown pulley type ${this.state.dropItem}`)
-    }
-
-    const prevTangents = getTangents(prevPulley, newPulley)
-    const nextTangents = getTangents(newPulley, nextPulley)
-
-    const prevBeltSection = {
-      id: `b${beltIdCounter++}`,
-      pulleyId: prevPulley.id,
-      nextPulleyId: newPulley.id,
-      start: prevTangents.start,
-      end: prevTangents.end,
-    }
-    const nextBeltSection = {
-      id: `b${beltIdCounter++}`,
-      pulleyId: newPulley.id,
-      nextPulleyId: nextPulley.id,
-      start: nextTangents.start,
-      end: nextTangents.end,
-    }
-
-    const oldBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === prevPulley.id)
-
-    this.setState(state => update(state, {
-      pulleys: {
-        $splice: [[prevPulleyIndex + 1, 0, newPulley]],
-      },
-      beltSections: {
-        $splice: [[oldBeltSectionIndex, 1, prevBeltSection, nextBeltSection]],
-      },
-    }))
   }
 
   onDeletePulley = () => {
@@ -483,5 +394,137 @@ export class App extends React.Component {
       },
     }))
   }
+
+  //endregion
+
+  //region Stage callbacks
+
+  onStageMouseMove = ({evt}) => {
+    if(!this.state.dropItem) {
+      return
+    }
+
+    const x = (evt.layerX - this.stage.x()) / this.stage.scaleX()
+    const y = (evt.layerY - this.stage.y()) / this.stage.scaleX()
+
+    let smallestDistance = Number.MAX_SAFE_INTEGER
+    let pulleyDropPoint = {x: 0, y: 0}
+    let pulleyIdToDropAfter = null
+
+    this.state.pulleys.forEach((pulley, pulleyIndex) => {
+      const nextPulley = this.state.pulleys[pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1]
+
+      const tangents = getTangents(pulley, nextPulley)
+      const distance = getDistanceOfSectionAndPoint([
+        {x: tangents.start.x, y: tangents.start.y},
+        {x: tangents.end.x, y: tangents.end.y},
+      ], {x, y})
+
+      if(distance < smallestDistance) {
+        smallestDistance = distance
+        pulleyIdToDropAfter = pulley.id
+
+        pulleyDropPoint = {
+          x: Math.round((tangents.start.x + tangents.end.x) / 2),
+          y: Math.round((tangents.start.y + tangents.end.y) / 2),
+        }
+      }
+    })
+
+    this.setState({
+      dropIndicator: {
+        pulleyId: pulleyIdToDropAfter,
+        x: pulleyDropPoint.x,
+        y: pulleyDropPoint.y,
+      },
+    })
+  }
+
+  onStageMouseLeave = () => this.setState({dropIndicator: null})
+
+  onStageClick = () => {
+    if(!this.state.dropItem) {
+      return
+    }
+
+    const prevPulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.dropIndicator.pulleyId)
+    const prevPulley = this.state.pulleys[prevPulleyIndex]
+    const nextPulley = this.state.pulleys[prevPulleyIndex === this.state.pulleys.length - 1 ? 0 : prevPulleyIndex + 1]
+    let newPulley
+
+    switch(this.state.dropItem) {
+      case PULLEY_TYPE.POINT_ON_CONVEYOR:
+        newPulley = new PointOnConveyor(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
+        break
+
+      case PULLEY_TYPE.PULLEY:
+        newPulley = new Pulley(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
+        break
+
+      case PULLEY_TYPE.DRIVE_PULLEY:
+        newPulley = new DrivePulley(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y)
+        break
+
+      default:
+        throw new Error(`Unknown pulley type ${this.state.dropItem}`)
+    }
+
+    const prevTangents = getTangents(prevPulley, newPulley)
+    const nextTangents = getTangents(newPulley, nextPulley)
+
+    const prevBeltSection = {
+      id: `b${beltIdCounter++}`,
+      pulleyId: prevPulley.id,
+      nextPulleyId: newPulley.id,
+      start: prevTangents.start,
+      end: prevTangents.end,
+    }
+    const nextBeltSection = {
+      id: `b${beltIdCounter++}`,
+      pulleyId: newPulley.id,
+      nextPulleyId: nextPulley.id,
+      start: nextTangents.start,
+      end: nextTangents.end,
+    }
+
+    const oldBeltSectionIndex = this.state.beltSections.findIndex(b => b.pulleyId === prevPulley.id)
+
+    this.setState(state => update(state, {
+      pulleys: {
+        $splice: [[prevPulleyIndex + 1, 0, newPulley]],
+      },
+      beltSections: {
+        $splice: [[oldBeltSectionIndex, 1, prevBeltSection, nextBeltSection]],
+      },
+    }))
+  }
+
+  onZoom = ({evt}) => {
+    evt.preventDefault()
+    const oldScale = this.stage.scaleX()
+    const scaleBy = 1.1
+
+    const pointer = this.stage.getPointerPosition()
+
+    const mousePointTo = {
+      x: (pointer.x - this.stage.x()) / oldScale,
+      y: (pointer.y - this.stage.y()) / oldScale,
+    }
+
+    const newScale =
+      evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy
+
+    this.stage.scale({ x: newScale, y: newScale })
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    }
+    this.stage.position(newPos)
+    this.stage.batchDraw()
+  }
+
+  //endregion
+
   //endregion
 }

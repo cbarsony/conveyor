@@ -4,6 +4,10 @@ import {Stage, Layer, Circle, Line, Group} from 'react-konva'
 
 import {PULLEY_TYPE} from '../utils/types'
 
+const log = message => {
+  // console.log(message)
+}
+
 class Pulley extends React.Component {
   shouldComponentUpdate(newProps) {
     return !_.isEqual(this.props, newProps)
@@ -15,7 +19,7 @@ class Pulley extends React.Component {
       onMove,
       onSelect,
     } = this.props
-    console.log('render Pulley', pulley.id)
+    log(`render Pulley ${pulley.id}`)
 
     if(pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR) {
       return (
@@ -71,7 +75,7 @@ class DropIndicator extends React.Component {
 
   render() {
     const {x, y, type} = this.props
-    console.log('render DropIndicator')
+    log('render DropIndicator')
 
     if(type === PULLEY_TYPE.POINT_ON_CONVEYOR) {
       return (
@@ -116,7 +120,7 @@ class BeltSection extends React.Component {
 
   render() {
     const {id, start, end} = this.props
-    console.log('render Belt', id)
+    log(`render Belt ${id}`)
 
     return (
       <Line
@@ -140,18 +144,21 @@ export class Designer extends React.Component {
   }
 
   render() {
-    console.log('render Designer')
+    log('render Designer')
 
     const {
       pulleys,
       beltSections,
       dropItem,
       dropIndicator,
+
       onPulleyMove,
       onPulleySelect,
+
       onStageMouseMove,
       onStageMouseLeave,
       onStageClick,
+      onZoom,
     } = this.props
     
     return (
@@ -161,6 +168,8 @@ export class Designer extends React.Component {
         onMouseMove={onStageMouseMove}
         onMouseLeave={onStageMouseLeave}
         onClick={onStageClick}
+        onWheel={onZoom}
+        draggable
       >
         <Layer>
           {beltSections.map(beltSection => (
