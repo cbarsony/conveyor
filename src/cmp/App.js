@@ -80,14 +80,9 @@ export class App extends React.Component {
   componentDidMount() {
     this.stage = window.Konva.stages[0]
 
-    /*const pulleys = [
-      new Pulley(`p${pulleyIdCounter++}`, 200, 300),
-      new Pulley(`p${pulleyIdCounter++}`, 1000, 300),
-    ]*/
-
     const pulleys = [
       new Pulley(`p${pulleyIdCounter++}`, 200, 300),
-      new Pulley(`p${pulleyIdCounter++}`, 600, 300, 200),
+      new Pulley(`p${pulleyIdCounter++}`, 1000, 300),
     ]
 
     /*const pulleys = _.range(7).map(n => new Pulley(

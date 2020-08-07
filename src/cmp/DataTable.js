@@ -20,14 +20,15 @@ export const DataTable = ({pulleys, beltSections}) => (
     </tr>
     </thead>
     <tbody>
-    {pulleys.map(pulley => {
+    {pulleys.map((pulley, pulleyIndex) => {
       const belt = beltSections.find(b => b.pulleyId === pulley.id)
-      const nextPulley = pulleys.find(p => p.id === belt.nextPulleyId)
-      const nextBelt = beltSections.find(b => b.pulleyId === nextPulley.id)
+      const prevPulleyIndex = pulleyIndex === 0 ? pulleys.length - 1 : pulleyIndex - 1
+      const prevPulley = pulleys[prevPulleyIndex]
+      const prevBelt = beltSections.find(b => b.pulleyId === prevPulley.id)
       const beltLength = getDistanceOfTwoPoints(belt.start, belt.end)
       const beltAngle = getAngleOfTwoPoints(belt.start, belt.end) * 180 / Math.PI
-      const nextBeltAngle = getAngleOfTwoPoints(nextBelt.start, nextBelt.end) * 180 / Math.PI
-      const wrapAngle = (beltAngle + (360 - nextBeltAngle)) % 360
+      const prevBeltAngle = getAngleOfTwoPoints(prevBelt.start, prevBelt.end) * 180 / Math.PI
+      const wrapAngle = (beltAngle + (360 - prevBeltAngle)) % 360
 
       return (
         <tr key={pulley.id} className={pulley.isSelected ? 'selectedPulley' : ''}>
