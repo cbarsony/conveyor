@@ -14,11 +14,7 @@ class Pulley extends React.Component {
   }
 
   render() {
-    const {
-      pulley,
-      onMove,
-      onSelect,
-    } = this.props
+    const {pulley, isSelected} = this.props
     log(`render Pulley ${pulley.id}`)
 
     if(pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR) {
@@ -28,17 +24,17 @@ class Pulley extends React.Component {
           x={pulley.x}
           y={pulley.y}
           draggable
-          onDragEnd={onMove}
-          onClick={onSelect}
+          onDragEnd={this.onDragEnd}
+          onClick={this.onClick}
         >
           <Line
             points={[0, -10, 0, 10]}
-            stroke={pulley.isSelected ? '#ff9089' : '#888'}
+            stroke={isSelected ? '#ff9089' : '#888'}
             shadowForStrokeEnabled={false}
           />
           <Line
             points={[-10, 0, 10, 0]}
-            stroke={pulley.isSelected ? '#ff9089' : '#888'}
+            stroke={isSelected ? '#ff9089' : '#888'}
             shadowForStrokeEnabled={false}
           />
           <Circle
@@ -57,15 +53,19 @@ class Pulley extends React.Component {
           y={pulley.y}
           radius={pulley.radius}
           fill={pulley.type === PULLEY_TYPE.PULLEY ? '#eee' : '#bfdaa1'}
-          stroke={pulley.isSelected ? '#ff9089' : '#888'}
+          stroke={isSelected ? '#ff9089' : '#888'}
           shadowForStrokeEnabled={false}
           draggable
-          onDragEnd={onMove}
-          onClick={onSelect}
+          onDragEnd={this.onDragEnd}
+          onClick={this.onClick}
         />
       )
     }
   }
+
+  onDragEnd = ({target}) => this.props.onMove(target.id(), Math.round(target.x()), Math.round(target.y()))
+
+  onClick = ({target}) => this.props.onSelect(target.id())
 }
 
 class DropIndicator extends React.Component {
@@ -120,7 +120,7 @@ class BeltSection extends React.Component {
   }
 
   render() {
-    const {beltSection} = this.props
+    const {beltSection, isSelected} = this.props
     log(`render Belt ${beltSection.id}`)
 
     return (
@@ -132,7 +132,7 @@ class BeltSection extends React.Component {
           beltSection.end.x,
           beltSection.end.y,
         ]}
-        stroke={beltSection.isSelected ? '#ff9089' : "#888"}
+        stroke={isSelected ? '#ff9089' : "#888"}
         shadowForStrokeEnabled={false}
       />
     )
@@ -140,44 +140,45 @@ class BeltSection extends React.Component {
 }
 
 export class Designer extends React.Component {
-  shouldComponentUpdate(newProps) {
-    return !_.isEqual(this.props, newProps)
-  }
-
   render() {
     log('render Designer')
 
     const {
       pulleys,
+      selectedPulleyId,
       beltSections,
       dropItem,
       dropIndicator,
 
       onPulleyMove,
       onPulleySelect,
-
-      onStageMouseMove,
       onStageMouseLeave,
       onStageClick,
-      onZoom,
     } = this.props
     
     return (
       <Stage
         width={1200}
         height={600}
-        onMouseMove={onStageMouseMove}
+        onMouseMove={this.onMouseMove}
         onMouseLeave={onStageMouseLeave}
         onClick={onStageClick}
-        onWheel={onZoom}
+        onWheel={this.onWheel}
         draggable
       >
         <Layer>
-          {beltSections.map(beltSection => <BeltSection key={beltSection.id} beltSection={beltSection}/>)}
+          {beltSections.map(beltSection => (
+            <BeltSection
+              key={beltSection.pulleyId}
+              beltSection={beltSection}
+              isSelected={beltSection.pulleyId === selectedPulleyId}
+            />
+          ))}
           {pulleys.map(pulley => (
             <Pulley
               key={pulley.id}
               pulley={pulley}
+              isSelected={pulley.id === selectedPulleyId}
               onMove={onPulleyMove}
               onSelect={onPulleySelect}
             />
@@ -193,4 +194,49 @@ export class Designer extends React.Component {
       </Stage>
     )
   }
+
+  //region Lifecycle
+
+  componentDidMount() {
+    this.stage = window.Konva.stages[0]
+  }
+
+  shouldComponentUpdate(newProps) {
+    return !_.isEqual(this.props, newProps)
+  }
+
+  //endregion Lifecycle
+
+  //region Callbacks
+
+  onMouseMove = ({evt}) => {
+    this.props.onStageMouseMove(evt.layerX, evt.layerY)
+  }
+
+  onWheel = ({evt}) => {
+    evt.preventDefault()
+    const oldScale = this.stage.scaleX()
+    const scaleBy = 1.1
+
+    const pointer = this.stage.getPointerPosition()
+
+    const mousePointTo = {
+      x: (pointer.x - this.stage.x()) / oldScale,
+      y: (pointer.y - this.stage.y()) / oldScale,
+    }
+
+    const newScale =
+      evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy
+
+    this.stage.scale({ x: newScale, y: newScale })
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    }
+    this.stage.position(newPos)
+    this.stage.batchDraw()
+  }
+
+  //endregion Callbacks
 }

@@ -1,9 +1,9 @@
 import React from 'react'
 
-import {PULLEY_TYPE} from '../utils/types'
+import {ROTATION, PULLEY_TYPE} from '../utils/types'
 import {getDistanceOfTwoPoints, getAngleOfTwoPoints} from '../utils/calculator'
 
-export const DataTable = ({pulleys, beltSections}) => (
+export const DataTable = ({pulleys, selectedPulleyId, beltSections}) => (
   <table className="table table-striped">
     <thead>
     <tr>
@@ -29,11 +29,12 @@ export const DataTable = ({pulleys, beltSections}) => (
       const beltLength = getDistanceOfTwoPoints(belt.start, belt.end)
       const beltAngle = getAngleOfTwoPoints(belt.start, belt.end) * 180 / Math.PI
       const prevBeltAngle = getAngleOfTwoPoints(prevBelt.start, prevBelt.end) * 180 / Math.PI
-      const contactAngle = (beltAngle + (360 - prevBeltAngle)) % 360
+      const contactAngleValue = (beltAngle + (360 - prevBeltAngle)) % 360
+      const contactAngle = pulley.rotation === ROTATION.CLOCKWISE ?  contactAngleValue : 360 - contactAngleValue
       const contactLength = (pulley.radius * 2 * Math.PI) / ((Math.PI * 2) / (contactAngle * Math.PI / 180))
 
       return (
-        <tr key={pulley.id} className={pulley.isSelected ? 'selectedPulley' : ''}>
+        <tr key={pulley.id} className={pulley.id === selectedPulleyId ? 'selectedPulley' : ''}>
           <th scope="row">{pulley.id}</th>
           <td>{pulley.x}</td>
           <td>{pulley.y}</td>
