@@ -225,12 +225,13 @@ export class App extends React.Component {
   }
 
   onStageMouseMove = (x, y) => {
+    const stageX = (x - this.stage.x()) / this.stage.scaleX()
+    const stageY = (y - this.stage.y()) / this.stage.scaleX()
+    // console.log(Math.round(stageX), Math.round(stageY))
+
     if(!this.state.dropItem) {
       return
     }
-
-    const stageX = (x - this.stage.x()) / this.stage.scaleX()
-    const stageY = (y - this.stage.y()) / this.stage.scaleX()
 
     let smallestDistance = Number.MAX_SAFE_INTEGER
     let pulleyDropPoint = {x: 0, y: 0}
