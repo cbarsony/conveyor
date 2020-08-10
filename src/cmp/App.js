@@ -22,6 +22,7 @@ export class App extends React.Component {
     dropItem: null,
     dropIndicator: null,
     selectedPulleyId: null,
+    isGridVisible: true,
   }
 
   render() {
@@ -46,7 +47,10 @@ export class App extends React.Component {
     return (
       <React.Fragment>
 
-        <Navbar/>
+        <Navbar
+          isGridVisible={this.state.isGridVisible}
+          onChangeGridVisible={isGridVisible => this.setState({isGridVisible})}
+        />
 
         <div id="Content" className="container-fluid row">
 
@@ -68,6 +72,7 @@ export class App extends React.Component {
               beltSections={beltSections}
               dropIndicator={this.state.dropIndicator}
               dropItem={this.state.dropItem}
+              isGridVisible={this.state.isGridVisible}
 
               onPulleyMove={this.onPulleyMove}
               onPulleySelect={this.onPulleySelect}
@@ -226,8 +231,8 @@ export class App extends React.Component {
 
   onStageMouseMove = (x, y) => {
     const stageX = (x - this.stage.x()) / this.stage.scaleX()
-    const stageY = (y - this.stage.y()) / this.stage.scaleX()
-    // console.log(Math.round(stageX), Math.round(stageY))
+    const stageY = (y - this.stage.y()) / this.stage.scaleY()
+    console.log(`x:${Math.round(stageX)}`, `y:${Math.round(stageY)}`)
 
     if(!this.state.dropItem) {
       return

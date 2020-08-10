@@ -197,7 +197,7 @@ class Grid extends React.Component {
         <Line
           key={`grid_h_${i}`}
           points={horizontalPoints}
-          dash={i % 5 === 0 ? [] : [5, 10]}
+          dash={i % 5 === 0 ? [] : [2, 3]}
           stroke="#aaa"
           shadowForStrokeEnabled={false}
           strokeWidth={i === 0 ? 1 : 0.5}
@@ -209,7 +209,7 @@ class Grid extends React.Component {
         <Line
           key={`grid_v_${i}`}
           points={verticalPoints}
-          dash={i % 5 === 0 ? [] : [5, 10]}
+          dash={i % 5 === 0 ? [] : [2, 3]}
           stroke="#aaa"
           shadowForStrokeEnabled={false}
           strokeWidth={i === 0 ? 1 : 0.5}
@@ -222,18 +222,22 @@ class Grid extends React.Component {
           key={`label_v_${i}`}
           text={i * 100}
           x={0}
-          y={i * 100}
+          y={i * 100 + 10}
+          scaleY={-1}
         />
       )
 
-      result.push(
-        <Text
-          key={`label_h_${i}`}
-          text={i * 100}
-          x={i * 100}
-          y={0}
-        />
-      )
+      if(i !== 0) {
+        result.push(
+          <Text
+            key={`label_h_${i}`}
+            text={i * 100}
+            x={i * 100}
+            y={10}
+            scaleY={-1}
+          />
+        )
+      }
     })
 
     return result
@@ -250,6 +254,7 @@ export class Designer extends React.Component {
       beltSections,
       dropItem,
       dropIndicator,
+      isGridVisible,
 
       onPulleyMove,
       onPulleySelect,
@@ -266,9 +271,11 @@ export class Designer extends React.Component {
         onClick={onStageClick}
         onWheel={this.onWheel}
         draggable
+        y={600}
+        scaleY={-1}
       >
         <Layer>
-          <Grid/>
+          {isGridVisible && <Grid/>}
           {beltSections.map(beltSection => (
             <BeltSection
               key={beltSection.pulleyId}
@@ -315,24 +322,25 @@ export class Designer extends React.Component {
 
   onWheel = ({evt}) => {
     evt.preventDefault()
-    const oldScale = this.stage.scaleX()
+    const oldScaleX = this.stage.scaleX()
+    const oldScaleY = this.stage.scaleY()
     const scaleBy = 1.1
 
     const pointer = this.stage.getPointerPosition()
 
     const mousePointTo = {
-      x: (pointer.x - this.stage.x()) / oldScale,
-      y: (pointer.y - this.stage.y()) / oldScale,
+      x: (pointer.x - this.stage.x()) / oldScaleX,
+      y: (pointer.y - this.stage.y()) / oldScaleY,
     }
 
-    const newScale =
-      evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy
+    const newScaleX = evt.deltaY < 0 ? oldScaleX * scaleBy : oldScaleX / scaleBy
+    // const newScaleY = evt.deltaY < 0 ? oldScaleY * scaleBy : oldScaleY / scaleBy
 
-    this.stage.scale({ x: newScale, y: newScale })
+    this.stage.scale({ x: newScaleX, y: -newScaleX })
 
     const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
+      x: pointer.x - mousePointTo.x * newScaleX,
+      y: pointer.y - mousePointTo.y * -newScaleX,
     }
     this.stage.position(newPos)
     this.stage.batchDraw()

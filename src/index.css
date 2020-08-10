@@ -43,3 +43,8 @@ footer {
 .selectedPulley {
   background: #ff9089 !important;
 }
+
+#ShowGrid {
+  color: #eee;
+  padding: 0 16px;
+}
