@@ -1,5 +1,6 @@
 import React from 'react'
 import update from 'immutability-helper'
+import _ from 'lodash'
 
 import {Navbar} from './Navbar'
 import {Sidebar} from './Sidebar'
@@ -14,7 +15,25 @@ import {
 } from '../utils/types'
 import {getTangents, getDistanceOfSectionAndPoint} from '../utils/calculator'
 
+const getBeltSections = pulleys => pulleys.map((pulley, pulleyIndex) => {
+  const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
+  const tangents = getTangents(pulley, nextPulley)
+
+  return {
+    pulleyId: pulley.id,
+    start: {
+      x: tangents.start.x,
+      y: tangents.start.y,
+    },
+    end: {
+      x: tangents.end.x,
+      y: tangents.end.y,
+    },
+  }
+})
+
 let pulleyIdCounter = 1
+let beltSections = []
 
 export class App extends React.Component {
   state = {
@@ -30,24 +49,6 @@ export class App extends React.Component {
   }
 
   render() {
-    const selectedPulley = this.state.pulleys.find(p => p.id === this.state.selectedPulleyId)
-    const beltSections = this.state.pulleys.map((pulley, pulleyIndex) => {
-      const nextPulley = pulleyIndex === this.state.pulleys.length - 1 ? this.state.pulleys[0] : this.state.pulleys[pulleyIndex + 1]
-      const tangents = getTangents(pulley, nextPulley)
-
-      return {
-        pulleyId: pulley.id,
-        start: {
-          x: tangents.start.x,
-          y: tangents.start.y,
-        },
-        end: {
-          x: tangents.end.x,
-          y: tangents.end.y,
-        },
-      }
-    })
-
     return (
       <React.Fragment>
 
@@ -59,7 +60,7 @@ export class App extends React.Component {
         <div id="Content" className="container-fluid row">
 
           <Sidebar
-            pulley={selectedPulley}
+            pulley={this.state.pulleys.find(p => p.id === this.state.selectedPulleyId)}
             dropItem={this.state.dropItem}
             cursor={this.state.cursor}
             onPulleyAttributeChange={this.onPulleyAttributeChange}
@@ -114,14 +115,23 @@ export class App extends React.Component {
     ]
 
     /*const pulleys = _.range(7).map(n => new Pulley(
-      `p${pulleyIdCounter++}`,
-      Math.round(Math.random() * 1100 + 50),
-      Math.round(Math.random() * 500 + 50),
-      Math.round(Math.random() * 40 + 10),
-      Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE
-    ))*/
+     `p${pulleyIdCounter++}`,
+     Math.round(Math.random() * 1100 + 50),
+     Math.round(Math.random() * 500 + 50),
+     Math.round(Math.random() * 40 + 10),
+     Math.random() > 0.5 ? ROTATION.CLOCKWISE : ROTATION.ANTICLOCKWISE
+     ))*/
 
     this.setState({pulleys})
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    //Optimization: call getBeltSections only if pulleys change
+    if(!_.isEqual(this.state.pulleys, nextState.pulleys)) {
+      beltSections = getBeltSections(nextState.pulleys)
+    }
+
+    return true
   }
 
   //endregion Lifecycle

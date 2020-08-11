@@ -8,10 +8,11 @@ export const getAngleOfTwoPoints = (p1, p2) => {
   return result % (Math.PI * 2)
 }
 
+//TODO: rewrite to handle better if one of the arguments is point!
 export const getTangents = (c1, c2) => {
   const d = getDistanceOfTwoPoints(c1, c2)
   const alpha = getAngleOfTwoPoints(c1, c2)
-  const isOuterTangent = c1.radius === 0 || c2.radius === 0 || c1.rotation === c2.rotation
+  const isOuterTangent = c1.rotation === c2.rotation
   let result
 
   if(isOuterTangent) {
@@ -38,17 +39,19 @@ export const getTangents = (c1, c2) => {
   else {
     const alpha1 = alpha
     const alpha2 = getAngleOfTwoPoints(c2, c1)
-    const x = d / (c1.radius + c2.radius) * c1.radius
+    //TODO: hack because if Point's radius is 0, calculation is incorrect!
+    const c1Radius = c1.radius > 0 ? c1.radius : 0.000001
+    const x = d / (c1Radius + c2.radius) * c1Radius
     const gammaDirectionFactor = c1.rotation === ROTATION.ANTICLOCKWISE ? 1 : -1
 
-    const beta = Math.acos(c1.radius / x)
+    let beta = Math.acos(c1Radius / x)
     const gamma1 = alpha1 - (beta * gammaDirectionFactor)
     const gamma2 = alpha2 - (beta * gammaDirectionFactor)
 
     result = {
       start: {
-        x: c1.x + Math.cos(gamma1) * c1.radius,
-        y: c1.y + Math.sin(gamma1) * c1.radius,
+        x: c1.x + Math.cos(gamma1) * c1Radius,
+        y: c1.y + Math.sin(gamma1) * c1Radius,
       },
       end: {
         x: c2.x + Math.cos(gamma2) * c2.radius,

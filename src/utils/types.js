@@ -22,7 +22,7 @@ export class PointOnConveyor {
     this.id = id
     this.x = x
     this.y = y
-    this.radius = 1
+    this.radius = 0
     this.rotation = ROTATION.CLOCKWISE
     this.type = PULLEY_TYPE.POINT_ON_CONVEYOR
   }

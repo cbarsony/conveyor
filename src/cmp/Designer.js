@@ -322,9 +322,15 @@ export class Designer extends React.Component {
 
   onWheel = ({evt}) => {
     evt.preventDefault()
+
     const oldScaleX = this.stage.scaleX()
     const oldScaleY = this.stage.scaleY()
     const scaleBy = 1.1
+    const newScale = evt.deltaY < 0 ? oldScaleX * scaleBy : oldScaleX / scaleBy
+
+    if(newScale < 0.1 || newScale > 10) {
+      return
+    }
 
     const pointer = this.stage.getPointerPosition()
 
@@ -333,14 +339,11 @@ export class Designer extends React.Component {
       y: (pointer.y - this.stage.y()) / oldScaleY,
     }
 
-    const newScaleX = evt.deltaY < 0 ? oldScaleX * scaleBy : oldScaleX / scaleBy
-    // const newScaleY = evt.deltaY < 0 ? oldScaleY * scaleBy : oldScaleY / scaleBy
-
-    this.stage.scale({ x: newScaleX, y: -newScaleX })
+    this.stage.scale({ x: newScale, y: -newScale })
 
     const newPos = {
-      x: pointer.x - mousePointTo.x * newScaleX,
-      y: pointer.y - mousePointTo.y * -newScaleX,
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * -newScale,
     }
     this.stage.position(newPos)
     this.stage.batchDraw()
