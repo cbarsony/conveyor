@@ -17,8 +17,8 @@ export const getTangents = (c1, c2) => {
   if(isOuterTangent) {
     //Radius change bug is caused here:
     const deltaR = c1.radius - c2.radius
-    const gamma1DirectionFactor = c1.rotation === ROTATION.ANTICLOCKWISE ? -1 : 1
-    const gamma2DirectionFactor = c2.rotation === ROTATION.ANTICLOCKWISE ? -1 : 1
+    const gamma1DirectionFactor = c1.rotation === ROTATION.ANTICLOCKWISE ? -1 : -1
+    const gamma2DirectionFactor = c2.rotation === ROTATION.ANTICLOCKWISE ? -1 : -1
 
     const beta = Math.asin(deltaR / d)
 

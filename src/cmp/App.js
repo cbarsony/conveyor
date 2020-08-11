@@ -23,6 +23,10 @@ export class App extends React.Component {
     dropIndicator: null,
     selectedPulleyId: null,
     isGridVisible: true,
+    cursor: {
+      x: 0,
+      y: 0,
+    },
   }
 
   render() {
@@ -57,6 +61,7 @@ export class App extends React.Component {
           <Sidebar
             pulley={selectedPulley}
             dropItem={this.state.dropItem}
+            cursor={this.state.cursor}
             onPulleyAttributeChange={this.onPulleyAttributeChange}
             onDeletePulley={this.onDeletePulley}
             onRotationChange={this.onRotationChange}
@@ -232,46 +237,55 @@ export class App extends React.Component {
   onStageMouseMove = (x, y) => {
     const stageX = (x - this.stage.x()) / this.stage.scaleX()
     const stageY = (y - this.stage.y()) / this.stage.scaleY()
-    console.log(`x:${Math.round(stageX)}`, `y:${Math.round(stageY)}`)
 
     if(!this.state.dropItem) {
-      return
+      this.setState({
+        cursor: {
+          x: Math.round(stageX),
+          y: Math.round(stageY),
+        },
+      })
     }
+    else {
+      let smallestDistance = Number.MAX_SAFE_INTEGER
+      let pulleyDropPoint = {x: 0, y: 0}
+      let pulleyIdToDropAfter = null
 
-    let smallestDistance = Number.MAX_SAFE_INTEGER
-    let pulleyDropPoint = {x: 0, y: 0}
-    let pulleyIdToDropAfter = null
+      this.state.pulleys.forEach((pulley, pulleyIndex) => {
+        const nextPulley = this.state.pulleys[pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1]
 
-    this.state.pulleys.forEach((pulley, pulleyIndex) => {
-      const nextPulley = this.state.pulleys[pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1]
+        const tangents = getTangents(pulley, nextPulley)
+        const distance = getDistanceOfSectionAndPoint([
+          {x: tangents.start.x, y: tangents.start.y},
+          {x: tangents.end.x, y: tangents.end.y},
+        ], {
+          x: stageX,
+          y: stageY,
+        })
 
-      const tangents = getTangents(pulley, nextPulley)
-      const distance = getDistanceOfSectionAndPoint([
-        {x: tangents.start.x, y: tangents.start.y},
-        {x: tangents.end.x, y: tangents.end.y},
-      ], {
-        x: stageX,
-        y: stageY,
+        if(distance < smallestDistance) {
+          smallestDistance = distance
+          pulleyIdToDropAfter = pulley.id
+
+          pulleyDropPoint = {
+            x: Math.round((tangents.start.x + tangents.end.x) / 2),
+            y: Math.round((tangents.start.y + tangents.end.y) / 2),
+          }
+        }
       })
 
-      if(distance < smallestDistance) {
-        smallestDistance = distance
-        pulleyIdToDropAfter = pulley.id
-
-        pulleyDropPoint = {
-          x: Math.round((tangents.start.x + tangents.end.x) / 2),
-          y: Math.round((tangents.start.y + tangents.end.y) / 2),
+      this.setState({
+        dropIndicator: {
+          pulleyId: pulleyIdToDropAfter,
+          x: pulleyDropPoint.x,
+          y: pulleyDropPoint.y,
+        },
+        cursor: {
+          x: stageX,
+          y: stageY,
         }
-      }
-    })
-
-    this.setState({
-      dropIndicator: {
-        pulleyId: pulleyIdToDropAfter,
-        x: pulleyDropPoint.x,
-        y: pulleyDropPoint.y,
-      },
-    })
+      })
+    }
   }
 
   onStageMouseLeave = () => this.setState({dropIndicator: null})

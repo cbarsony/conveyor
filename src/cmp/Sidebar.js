@@ -5,6 +5,7 @@ import {ROTATION, PULLEY_TYPE} from '../utils/types'
 export const Sidebar = ({
   pulley,
   dropItem,
+  cursor,
   onPulleyAttributeChange,
   onDeletePulley,
   onRotationChange,
@@ -29,6 +30,9 @@ export const Sidebar = ({
         className="sidebarAddButton btn btn-sm btn-outline-secondary"
         onClick={() => onAddPulley(PULLEY_TYPE.DRIVE_PULLEY)}
       >{dropItem === PULLEY_TYPE.DRIVE_PULLEY ? 'Cancel' : 'Add Drive Pulley'}</button>
+
+      <div>x: {cursor.x}</div>
+      <div>y: {cursor.y}</div>
 
       {pulley && (
         <form>
