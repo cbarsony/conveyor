@@ -92,6 +92,9 @@ export class App extends React.Component {
               pulleys={this.state.pulleys}
               selectedPulleyId={this.state.selectedPulleyId}
               beltSections={beltSections}
+              onPulleyAttributeChange={this.onPulleyAttributeChange}
+              onRotationChange={this.onRotationChange}
+              onTypeChange={this.onTypeChange}
             />
 
           </main>
@@ -165,8 +168,9 @@ export class App extends React.Component {
     }))
   }
 
-  onPulleyAttributeChange = (key, value) => {
-    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
+  onPulleyAttributeChange = (key, value, pulleyId) => {
+    const id = pulleyId || this.state.selectedPulleyId
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === id)
 
     this.setState(state => update(state, {
       pulleys: {
@@ -196,8 +200,9 @@ export class App extends React.Component {
     }))
   }
 
-  onRotationChange = rotation => {
-    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
+  onRotationChange = (rotation, pulleyId) => {
+    const id = pulleyId || this.state.selectedPulleyId
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === id)
 
     this.setState(state => update(state, {
       pulleys: {
@@ -210,8 +215,9 @@ export class App extends React.Component {
     }))
   }
 
-  onTypeChange = type => {
-    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
+  onTypeChange = (type, pulleyId) => {
+    const id = pulleyId || this.state.selectedPulleyId
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === id)
 
     const pulley = this.state.pulleys[pulleyIndex]
     let newPulley

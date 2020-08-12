@@ -59,3 +59,11 @@ main table {
   color: #eee;
   padding: 0 16px;
 }
+
+#DataTable input {
+  width: 50px;
+}
+
+#DataTable select {
+  width: 100px;
+}

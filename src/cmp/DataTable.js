@@ -3,8 +3,15 @@ import React from 'react'
 import {ROTATION, PULLEY_TYPE} from '../utils/types'
 import {getDistanceOfTwoPoints, getAngleOfTwoPoints} from '../utils/calculator'
 
-export const DataTable = ({pulleys, selectedPulleyId, beltSections}) => (
-  <table className="table table-striped">
+export const DataTable = ({
+  pulleys,
+  selectedPulleyId,
+  beltSections,
+  onPulleyAttributeChange,
+  onRotationChange,
+  onTypeChange,
+}) => (
+  <table id="DataTable" className="table table-striped table-sm">
     <thead>
     <tr>
       <th scope="col">#</th>
@@ -36,12 +43,92 @@ export const DataTable = ({pulleys, selectedPulleyId, beltSections}) => (
       return (
         <tr key={pulley.id} className={pulley.id === selectedPulleyId ? 'selectedPulley' : ''}>
           <th scope="row">{pulley.id}</th>
-          <td>{pulley.x}</td>
-          <td>{pulley.y}</td>
-          <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : pulley.radius}</td>
-          <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : pulley.rotation}</td>
-          <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? 'POINT' : pulley.type}</td>
-          <td>{pulley.type === PULLEY_TYPE.DRIVE_PULLEY ? pulley.driveCount : '-'}</td>
+
+          <td>
+            <div className="input-group input-group-sm">
+              <input
+                type="number"
+                className="form-control"
+                aria-describedby="inputGroup-sizing-sm"
+                value={pulley.x}
+                onChange={e => onPulleyAttributeChange('x', Number(e.target.value), pulley.id)}
+              />
+            </div>
+          </td>
+
+          <td>
+            <div className="input-group input-group-sm">
+              <input
+                type="number"
+                className="form-control"
+                aria-describedby="inputGroup-sizing-sm"
+                value={pulley.y}
+                onChange={e => onPulleyAttributeChange('y', Number(e.target.value), pulley.id)}
+              />
+            </div>
+          </td>
+
+          <td>
+            {pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : (
+              <div className="input-group input-group-sm">
+                <input
+                  type="number"
+                  className="form-control"
+                  min={1}
+                  max={1000}
+                  value={pulley.radius}
+                  onChange={e => onPulleyAttributeChange('radius', Number(e.target.value), pulley.id)}
+                />
+              </div>
+            )}
+          </td>
+
+          <td>
+            {pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : (
+              <div className="input-group input-group-sm">
+                <select
+                  id="inputRotation"
+                  className="form-control"
+                  value={pulley.rotation}
+                  onChange={e => onRotationChange(e.target.value, pulley.id)}
+                >
+                  <option>{ROTATION.CLOCKWISE}</option>
+                  <option>{ROTATION.ANTICLOCKWISE}</option>
+                </select>
+              </div>
+            )}
+          </td>
+
+          <td>
+            <div className="input-group input-group-sm">
+              <select
+                id="inputType"
+                className="form-control"
+                value={pulley.type}
+                onChange={e => onTypeChange(e.target.value, pulley.id)}
+              >
+                <option value={PULLEY_TYPE.POINT_ON_CONVEYOR}>POINT</option>
+                <option>{PULLEY_TYPE.PULLEY}</option>
+                <option>{PULLEY_TYPE.DRIVE_PULLEY}</option>
+              </select>
+            </div>
+          </td>
+
+          <td>
+            {pulley.type === PULLEY_TYPE.DRIVE_PULLEY ? (
+              <div className="input-group input-group-sm">
+                <input
+                  type="number"
+                  className="form-control"
+                  id="inputDriveCount"
+                  min={1}
+                  value={pulley.driveCount}
+                  onChange={e => onPulleyAttributeChange('driveCount', Number(e.target.value), pulley.id)}
+                />
+              </div>
+            ) : '-'}
+          </td>
+
           <td>{beltLength.toFixed(2)}</td>
           <td>{beltAngle.toFixed(2)}&#176;</td>
           <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : contactLength.toFixed(2)}</td>
