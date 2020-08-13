@@ -1,6 +1,7 @@
 import React from 'react'
 import update from 'immutability-helper'
 import _ from 'lodash'
+import Flatten from '@flatten-js/core'
 
 import {Navbar} from './Navbar'
 import {Sidebar} from './Sidebar'
@@ -13,7 +14,7 @@ import {
   // ROTATION,
   PULLEY_TYPE,
 } from '../utils/types'
-import {getTangents, getDistanceOfSectionAndPoint} from '../utils/calculator'
+import {getTangents, getDistanceOfSectionAndPoint, getDistanceOfTwoPoints} from '../utils/calculator'
 
 const getBeltSections = pulleys => pulleys.map((pulley, pulleyIndex) => {
   const nextPulley = pulleyIndex === pulleys.length - 1 ? pulleys[0] : pulleys[pulleyIndex + 1]
@@ -264,16 +265,16 @@ export class App extends React.Component {
     }
     else {
       let smallestDistance = Number.MAX_SAFE_INTEGER
-      let pulleyDropPoint = {x: 0, y: 0}
-      let pulleyIdToDropAfter = null
+      let pulleyToDrop = null
+      let nextPulleyToDrop = null
 
       this.state.pulleys.forEach((pulley, pulleyIndex) => {
         const nextPulley = this.state.pulleys[pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1]
 
-        const tangents = getTangents(pulley, nextPulley)
+        const tempTangents = getTangents(pulley, nextPulley)
         const distance = getDistanceOfSectionAndPoint([
-          {x: tangents.start.x, y: tangents.start.y},
-          {x: tangents.end.x, y: tangents.end.y},
+          {x: tempTangents.start.x, y: tempTangents.start.y},
+          {x: tempTangents.end.x, y: tempTangents.end.y},
         ], {
           x: stageX,
           y: stageY,
@@ -281,20 +282,25 @@ export class App extends React.Component {
 
         if(distance < smallestDistance) {
           smallestDistance = distance
-          pulleyIdToDropAfter = pulley.id
-
-          pulleyDropPoint = {
-            x: Math.round((tangents.start.x + tangents.end.x) / 2),
-            y: Math.round((tangents.start.y + tangents.end.y) / 2),
-          }
+          pulleyToDrop = pulley
+          nextPulleyToDrop = nextPulley
         }
       })
 
+      const tangents = getTangents(pulleyToDrop, nextPulleyToDrop)
+
+      const cursor = new Flatten.Point(stageX, stageY)
+      const segment = new Flatten.Segment(
+        new Flatten.Point(tangents.start.x, tangents.start.y),
+        new Flatten.Point(tangents.end.x, tangents.end.y),
+      )
+      const distance = cursor.distanceTo(segment)
+
       this.setState({
         dropIndicator: {
-          pulleyId: pulleyIdToDropAfter,
-          x: pulleyDropPoint.x,
-          y: pulleyDropPoint.y,
+          pulleyId: pulleyToDrop.id,
+          x: distance[1].pe.x,
+          y: distance[1].pe.y,
         },
         cursor: {
           x: stageX,
