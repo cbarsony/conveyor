@@ -1,4 +1,9 @@
+import Flatten from '@flatten-js/core'
+
 import {getTangents} from '../utils/calculator'
+
+let pulleyIdCounter = 1
+let hopperIdCounter = 1
 
 /** @enum {ROTATION} */
 export const ROTATION = {
@@ -26,15 +31,14 @@ export const HOPPER_TYPE = {
 /** @class */
 export class Pulley {
   /**
-   * @param id {string} - uuid
    * @param x {number}
    * @param y {number}
    * @param type {PULLEY_TYPE}
    * @param radius {number}
    * @param rotation {ROTATION}
    */
-  constructor(id, x, y, type, radius = 20, rotation = ROTATION.CLOCKWISE) {
-    this.id = id
+  constructor(x, y, type, radius = 20, rotation = ROTATION.CLOCKWISE) {
+    this.id = `p${pulleyIdCounter++}`
     this.x = x
     this.y = y
     this.type = type
@@ -52,9 +56,16 @@ export class Pulley {
     return new BeltSection(this.id, tangents.start, tangents.end)
   }
 
-  /** @param hopper {Hopper} */
-  addHopper(hopper) {
-    this.hoppers.push(hopper)
+  addHopper(x, y, type, nextPulley) {
+    const tangents = getTangents(this, nextPulley)
+    const beltSectionStartPoint = new Flatten.Point(tangents.start.x, tangents.start.y)
+    const beltSectionEndPoint = new Flatten.Point(tangents.end.x, tangents.end.y)
+    const cursorPoint = new Flatten.Point(x, y)
+    const hopperDistance = cursorPoint.distanceTo(beltSectionStartPoint)[0]
+    const beltSectionLength = beltSectionStartPoint.distanceTo(beltSectionEndPoint)
+    const distance = hopperDistance / beltSectionLength[0]
+
+    this.hoppers.push(new Hopper(type, distance))
   }
 
   /** @param id {string} */
@@ -62,9 +73,27 @@ export class Pulley {
     /* ... */
   }
 
-  /** @returns {Hopper[]} */
-  getHoppers() {
+  /**
+   * @param nextPulley {Pulley}
+   * @returns {Hopper[]}
+   */
+  getHoppers(nextPulley) {
+    return this.hoppers.map(hopper => {
+      const beltSection = this.getBeltSection(nextPulley)
+      const segment = new Flatten.Segment(
+        new Flatten.Point(beltSection.start.x, beltSection.start.y),
+        new Flatten.Point(beltSection.end.x, beltSection.end.y),
+      )
+      const circle = new Flatten.Circle(new Flatten.Point(beltSection.start.x, beltSection.start.y), hopper.distance * segment.length)
+      const intersection = segment.intersect(circle)
 
+      return {
+        x: intersection[0] ? intersection[0].x : beltSection.end.x,
+        y: intersection[0] ? intersection[0].y : beltSection.end.y,
+        id: hopper.id,
+        type: hopper.type,
+      }
+    })
   }
 }
 
@@ -85,12 +114,11 @@ export class BeltSection {
 /** @class */
 export class Hopper {
   /**
-   * @param id {string} - uuid
    * @param type {HOPPER_TYPE}
    * @param distance {number} - distance from BeltSection start
    */
-  constructor(id, type, distance) {
-    this.id = id
+  constructor(type, distance) {
+    this.id = `h${hopperIdCounter++}`
     this.type = type
     this.distance = distance
   }

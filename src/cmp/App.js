@@ -9,10 +9,9 @@ import {DataTable} from './DataTable'
 import {
   Pulley,
   PULLEY_TYPE,
+  HOPPER_TYPE,
 } from '../utils/types'
 import {getTangents, getDistanceOfSectionAndPoint} from '../utils/calculator'
-
-let pulleyIdCounter = 1
 
 export class App extends React.Component {
   state = {
@@ -119,23 +118,12 @@ export class App extends React.Component {
     this.stage = window.Konva.stages[0]
 
     const pulleys = [
-      new Pulley(`p${pulleyIdCounter++}`, 200, 300, PULLEY_TYPE.HEAD),
-      new Pulley(`p${pulleyIdCounter++}`, 1000, 300, PULLEY_TYPE.TAIL),
+      new Pulley(200, 300, PULLEY_TYPE.HEAD),
+      new Pulley(1000, 300, PULLEY_TYPE.TAIL),
     ]
 
     this.setState({pulleys})
   }
-
-/*
-  shouldComponentUpdate(nextProps, nextState) {
-    //Optimization: call getBeltSections only if pulleys change
-    if(!_.isEqual(this.state.pulleys, nextState.pulleys)) {
-      beltSections = getBeltSections(nextState.pulleys)
-    }
-
-    return true
-  }
-*/
 
   //endregion Lifecycle
 
@@ -226,7 +214,7 @@ export class App extends React.Component {
 
       case PULLEY_TYPE.PULLEY:
         const pulleyRadius = pulley.type === PULLEY_TYPE.IDLER ? 20 : pulley.radius
-        newPulley = new Pulley(pulley.id, pulley.x, pulley.y, pulleyRadius, pulley.rotation)
+        newPulley = new Pulley(pulley.x, pulley.y, pulleyRadius, pulley.rotation)
         break
 
       case PULLEY_TYPE.DRIVE_PULLEY:
@@ -313,15 +301,31 @@ export class App extends React.Component {
     if(this.state.dropItem === 'NONE') {
       return
     }
+    else if(this.state.dropItem === HOPPER_TYPE.FEED || this.state.dropItem === HOPPER_TYPE.DISCHARGE) {
+      const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.dropIndicator.pulleyId)
+      const nextPulleyIndex = pulleyIndex === this.state.pulleys.length - 1 ? 0 : pulleyIndex + 1
+      const pulley = this.state.pulleys[pulleyIndex]
+      const nextPulley = this.state.pulleys[nextPulleyIndex]
 
-    const prevPulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.dropIndicator.pulleyId)
-    const newPulley = new Pulley(`p${pulleyIdCounter++}`, this.state.dropIndicator.x, this.state.dropIndicator.y, PULLEY_TYPE[this.state.dropItem])
+      pulley.addHopper(
+        this.state.dropIndicator.x,
+        this.state.dropIndicator.y,
+        this.state.dropItem,
+        nextPulley,
+      )
 
-    this.setState(state => update(state, {
-      pulleys: {
-        $splice: [[prevPulleyIndex + 1, 0, newPulley]],
-      },
-    }))
+      this.forceUpdate()
+    }
+    else {
+      const prevPulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.dropIndicator.pulleyId)
+      const newPulley = new Pulley(this.state.dropIndicator.x, this.state.dropIndicator.y, PULLEY_TYPE[this.state.dropItem])
+
+      this.setState(state => update(state, {
+        pulleys: {
+          $splice: [[prevPulleyIndex + 1, 0, newPulley]],
+        },
+      }))
+    }
   }
 
   //endregion Callbacks

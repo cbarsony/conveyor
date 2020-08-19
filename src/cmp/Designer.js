@@ -2,7 +2,7 @@ import React from 'react'
 import _ from 'lodash'
 import {Stage, Layer, Circle, Line, Group, Text} from 'react-konva'
 
-import {PULLEY_TYPE} from '../utils/types'
+import {PULLEY_TYPE, HOPPER_TYPE} from '../utils/types'
 
 const log = message => {
   // console.log(message)
@@ -88,7 +88,7 @@ class DropIndicator extends React.Component {
     const {x, y, type} = this.props
     log('render DropIndicator')
 
-    if(type === PULLEY_TYPE.IDLER) {
+    if(type === PULLEY_TYPE.IDLER || type === HOPPER_TYPE.FEED || type === HOPPER_TYPE.DISCHARGE) {
       return (
         <Group
           id="drop-indicator"
@@ -155,6 +155,21 @@ class BeltSection extends React.Component {
         shadowForStrokeEnabled={false}
         strokeWidth={2}
         strokeScaleEnabled={false}
+      />
+    )
+  }
+}
+
+class Hopper extends React.Component {
+  render() {
+    const {x, y} = this.props
+
+    return (
+      <Line
+        points={[x, y, x - 10, y + 10, x + 10, y + 10]}
+        closed
+        stroke="#aaa"
+        fill="#eee"
       />
     )
   }
@@ -276,6 +291,19 @@ export class Designer extends React.Component {
               onSelect={onPulleySelect}
             />
           ))}
+          {pulleys.map((pulley, pulleyIndex) => {
+            const nextPulleyIndex = pulleyIndex === pulleys.length - 1 ? 0 : pulleyIndex + 1
+            const nextPulley = pulleys[nextPulleyIndex]
+            const hoppers = pulley.getHoppers(nextPulley)
+
+            return hoppers.map(hopper => (
+              <Hopper
+                key={hopper.id}
+                x={hopper.x}
+                y={hopper.y}
+              />
+            ))
+          })}
           {dropIndicator && (
             <DropIndicator
               x={dropIndicator.x}
