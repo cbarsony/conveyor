@@ -4,40 +4,16 @@ import {ROTATION, PULLEY_TYPE} from '../utils/types'
 
 export const Sidebar = ({
   pulley,
-  dropItem,
-  cursor,
   onPulleyAttributeChange,
   onDeletePulley,
   onRotationChange,
   onTypeChange,
-  onAddPulley,
 }) => (
   <nav className="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
     <div className="sidebar-sticky pt-3 list-group">
 
-      <button
-        type="button"
-        className="sidebarAddButton btn btn-sm btn-outline-secondary"
-        onClick={() => onAddPulley(PULLEY_TYPE.POINT_ON_CONVEYOR)}
-      >{dropItem === PULLEY_TYPE.POINT_ON_CONVEYOR ? 'Cancel' : 'Add Point'}</button>
-      <button
-        type="button"
-        className="sidebarAddButton btn btn-sm btn-outline-secondary"
-        onClick={() => onAddPulley(PULLEY_TYPE.PULLEY)}
-      >{dropItem === PULLEY_TYPE.PULLEY ? 'Cancel' : 'Add Pulley'}</button>
-      <button
-        type="button"
-        className="sidebarAddButton btn btn-sm btn-outline-secondary"
-        onClick={() => onAddPulley(PULLEY_TYPE.DRIVE_PULLEY)}
-      >{dropItem === PULLEY_TYPE.DRIVE_PULLEY ? 'Cancel' : 'Add Drive Pulley'}</button>
-
-      <div>x: {cursor.x}</div>
-      <div>y: {cursor.y}</div>
-
       {pulley && (
         <form>
-
-          <hr/>
 
           <div className="form-group row">
             <div className="col-sm-3">#</div>
@@ -70,7 +46,7 @@ export const Sidebar = ({
             </div>
           </div>
 
-          {pulley.type !== PULLEY_TYPE.POINT_ON_CONVEYOR && (
+          {pulley.type !== PULLEY_TYPE.IDLER && (
             <React.Fragment>
 
               <div className="form-group row">
@@ -115,7 +91,7 @@ export const Sidebar = ({
                 value={pulley.type}
                 onChange={e => onTypeChange(e.target.value)}
               >
-                <option value={PULLEY_TYPE.POINT_ON_CONVEYOR}>POINT</option>
+                <option value={PULLEY_TYPE.IDLER}>POINT</option>
                 <option>{PULLEY_TYPE.PULLEY}</option>
                 <option>{PULLEY_TYPE.DRIVE_PULLEY}</option>
               </select>

@@ -9,7 +9,6 @@ const log = message => {
 }
 
 class Pulley extends React.Component {
-  state = {hover: false}
 
 /*
   shouldComponentUpdate(newProps, newState) {
@@ -19,80 +18,60 @@ class Pulley extends React.Component {
 */
 
   render() {
-    const {pulley, isSelected} = this.props
-    log(`render Pulley ${pulley.id}`)
+    log(`render Pulley ${this.props.pulley.id}`)
 
-    if(pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR) {
-      return (
-        <Group
-          id={pulley.id}
-          x={pulley.x}
-          y={pulley.y}
-          draggable
-          onDragEnd={this.onDragEnd}
-          onClick={this.onClick}
-        >
-          <Line
-            points={[0, -10, 0, 10]}
-            stroke={isSelected ? '#ff9089' : '#888'}
-            shadowForStrokeEnabled={false}
-            strokeWidth={3}
-            strokeScaleEnabled={false}
-          />
-          <Line
-            points={[-10, 0, 10, 0]}
-            stroke={isSelected ? '#ff9089' : '#888'}
-            shadowForStrokeEnabled={false}
-            strokeWidth={3}
-            strokeScaleEnabled={false}
-          />
-          <Circle
-            onMouseOver={() => this.setState({hover: true})}
-            onMouseOut={() => this.setState({hover: false})}
-            id={pulley.id}
-            radius={20}
-            shadowForStrokeEnabled={false}
-            strokeWidth={2}
-            strokeScaleEnabled={false}
-            fill={'#cbf6ee'}
-            opacity={this.state.hover ? 0.3 : 0}
-          />
-        </Group>
-      )
-    }
-    else {
-      let fill
+    const pulley = (
+      <Circle
+        id={this.props.pulley.id}
+        x={this.props.pulley.x}
+        y={this.props.pulley.y}
+        radius={this.props.pulley.radius}
+        fill="#eee"
+        stroke={this.props.isSelected ? '#ff9089' : '#888'}
+        shadowForStrokeEnabled={false}
+        draggable
+        onDragEnd={this.onDragEnd}
+        onClick={this.onClick}
+        strokeWidth={2}
+        strokeScaleEnabled={false}
+      />
+    )
 
-      if(this.state.hover) {
-        fill = '#cbf6ee'
-      }
-      else if(pulley.type === PULLEY_TYPE.PULLEY) {
-        fill = '#eee'
-      }
-      else {
-        fill = '#bfdaa1'
-      }
-
-      return (
-        <Circle
-          id={pulley.id}
-          x={pulley.x}
-          y={pulley.y}
-          radius={pulley.radius}
-          fill={fill}
-          stroke={isSelected ? '#ff9089' : '#888'}
+    const idler = (
+      <Group
+        id={this.props.pulley.id}
+        x={this.props.pulley.x}
+        y={this.props.pulley.y}
+        draggable
+        onDragEnd={this.onDragEnd}
+        onClick={this.onClick}
+      >
+        <Line
+          points={[0, -10, 0, 10]}
+          stroke={this.props.isSelected ? '#ff9089' : '#888'}
           shadowForStrokeEnabled={false}
-          draggable
-          onDragEnd={this.onDragEnd}
-          onClick={this.onClick}
-          strokeWidth={2}
+          strokeWidth={3}
           strokeScaleEnabled={false}
-          opacity={this.state.hover ? 0.3 : 1}
-          onMouseOver={() => this.setState({hover: true})}
-          onMouseOut={() => this.setState({hover: false})}
         />
-      )
-    }
+        <Line
+          points={[-10, 0, 10, 0]}
+          stroke={this.props.isSelected ? '#ff9089' : '#888'}
+          shadowForStrokeEnabled={false}
+          strokeWidth={3}
+          strokeScaleEnabled={false}
+        />
+        <Circle
+          id={this.props.pulley.id}
+          radius={20}
+          shadowForStrokeEnabled={false}
+          strokeScaleEnabled={false}
+          opacity={0}
+        />
+      </Group>
+    )
+
+
+    return this.props.pulley.type === PULLEY_TYPE.IDLER ? idler : pulley
   }
 
   onDragEnd = ({target}) => this.props.onMove(target.id(), Math.round(target.x()), Math.round(target.y()))
@@ -109,7 +88,7 @@ class DropIndicator extends React.Component {
     const {x, y, type} = this.props
     log('render DropIndicator')
 
-    if(type === PULLEY_TYPE.POINT_ON_CONVEYOR) {
+    if(type === PULLEY_TYPE.IDLER) {
       return (
         <Group
           id="drop-indicator"
@@ -251,7 +230,6 @@ export class Designer extends React.Component {
     const {
       pulleys,
       selectedPulleyId,
-      beltSections,
       dropItem,
       dropIndicator,
       isGridVisible,
@@ -276,13 +254,19 @@ export class Designer extends React.Component {
       >
         <Layer>
           {isGridVisible && <Grid/>}
-          {beltSections.map(beltSection => (
-            <BeltSection
-              key={beltSection.pulleyId}
-              beltSection={beltSection}
-              isSelected={beltSection.pulleyId === selectedPulleyId}
-            />
-          ))}
+          {pulleys.map((pulley, pulleyIndex) => {
+            const nextPulleyIndex = pulleyIndex === pulleys.length - 1 ? 0 : pulleyIndex + 1
+            const nextPulley = pulleys[nextPulleyIndex]
+            const beltSection = pulley.getBeltSection(nextPulley)
+
+            return (
+              <BeltSection
+                key={beltSection.pulleyId}
+                beltSection={beltSection}
+                isSelected={beltSection.pulleyId === selectedPulleyId}
+              />
+            )
+          })}
           {pulleys.map(pulley => (
             <Pulley
               key={pulley.id}

@@ -51,6 +51,10 @@ footer {
   background: #ff9089 !important;
 }
 
+main {
+  padding-top: 8px;
+}
+
 main table {
   margin-bottom: 2rem !important;
 }
@@ -66,4 +70,9 @@ main table {
 
 #DataTable select {
   width: 100px;
+}
+
+.toggleButton {
+  margin-bottom: 8px;
+  display: block;
 }

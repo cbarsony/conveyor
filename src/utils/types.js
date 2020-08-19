@@ -1,3 +1,5 @@
+import {getTangents} from '../utils/calculator'
+
 /** @enum {ROTATION} */
 export const ROTATION = {
   CLOCKWISE: 'CLOCKWISE',
@@ -6,60 +8,90 @@ export const ROTATION = {
 
 /** @enum {PULLEY_TYPE} */
 export const PULLEY_TYPE = {
-  POINT_ON_CONVEYOR: 'POINT_ON_CONVEYOR',
-  PULLEY: 'PULLEY',
-  DRIVE_PULLEY: 'DRIVE_PULLEY',
+  IDLER: 'IDLER',
+  TAIL: 'TAIL',
+  HEAD: 'HEAD',
+  BEND: 'BEND',
+  SNUB: 'SNUB',
+  TAKEUP: 'TAKEUP',
+  DRIVE: 'DRIVE',
+}
+
+/** @enum {HOPPER_TYPE} */
+export const HOPPER_TYPE = {
+  FEED: 'FEED',
+  DISCHARGE: 'DISCHARGE',
 }
 
 /** @class */
-export class PointOnConveyor {
+export class Pulley {
   /**
-   * @param id {string}
+   * @param id {string} - uuid
    * @param x {number}
    * @param y {number}
+   * @param type {PULLEY_TYPE}
+   * @param radius {number}
+   * @param rotation {ROTATION}
    */
-  constructor(id, x, y) {
+  constructor(id, x, y, type, radius = 20, rotation = ROTATION.CLOCKWISE) {
     this.id = id
     this.x = x
     this.y = y
-    this.radius = 0
-    this.rotation = ROTATION.CLOCKWISE
-    this.type = PULLEY_TYPE.POINT_ON_CONVEYOR
-  }
-}
-
-/** @class */
-export class Pulley extends PointOnConveyor{
-  /**
-   * @param id {string}
-   * @param x {number}
-   * @param y {number}
-   * @param radius {number}
-   * @param rotation {ROTATION}
-   */
-  constructor(id, x, y, radius = 20, rotation = ROTATION.CLOCKWISE) {
-    super(id, x, y)
-
-    this.radius = radius
+    this.type = type
+    this.radius = type === PULLEY_TYPE.IDLER ? 0 : radius
     this.rotation = rotation
-    this.type = PULLEY_TYPE.PULLEY
+    this.hoppers = []
+  }
+
+  /**
+   * @param nextPulley {Pulley}
+   * @returns {BeltSection}
+   */
+  getBeltSection(nextPulley) {
+    const tangents = getTangents(this, nextPulley)
+    return new BeltSection(this.id, tangents.start, tangents.end)
+  }
+
+  /** @param hopper {Hopper} */
+  addHopper(hopper) {
+    this.hoppers.push(hopper)
+  }
+
+  /** @param id {string} */
+  removeHopper(id) {
+    /* ... */
+  }
+
+  /** @returns {Hopper[]} */
+  getHoppers() {
+
   }
 }
 
 /** @class */
-export class DrivePulley extends Pulley {
+export class BeltSection {
   /**
-   * @param id {string}
-   * @param x {number}
-   * @param y {number}
-   * @param radius {number}
-   * @param rotation {ROTATION}
-   * @param driveCount {number}
+   * @param pulleyId {string}
+   * @param start {object} - {x:n, y:n}
+   * @param end {object} - {x:n, y:n}
    */
-  constructor(id, x, y, radius = 20, rotation = ROTATION.CLOCKWISE, driveCount = 1) {
-    super(id, x, y, radius, rotation)
+  constructor(pulleyId, start, end) {
+    this.pulleyId = pulleyId
+    this.start = start
+    this.end = end
+  }
+}
 
-    this.driveCount = driveCount
-    this.type = PULLEY_TYPE.DRIVE_PULLEY
+/** @class */
+export class Hopper {
+  /**
+   * @param id {string} - uuid
+   * @param type {HOPPER_TYPE}
+   * @param distance {number} - distance from BeltSection start
+   */
+  constructor(id, type, distance) {
+    this.id = id
+    this.type = type
+    this.distance = distance
   }
 }

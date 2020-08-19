@@ -29,10 +29,15 @@ export const DataTable = ({
     </thead>
     <tbody>
     {pulleys.map((pulley, pulleyIndex) => {
-      const belt = beltSections.find(b => b.pulleyId === pulley.id)
       const prevPulleyIndex = pulleyIndex === 0 ? pulleys.length - 1 : pulleyIndex - 1
       const prevPulley = pulleys[prevPulleyIndex]
-      const prevBelt = beltSections.find(b => b.pulleyId === prevPulley.id)
+
+      const nextPulleyIndex = pulleyIndex === pulleys.length - 1 ? 0 : pulleyIndex + 1
+      const nextPulley = pulleys[nextPulleyIndex]
+
+      const belt = pulley.getBeltSection(nextPulley)
+      const prevBelt = prevPulley.getBeltSection(pulley)
+
       const beltLength = getDistanceOfTwoPoints(belt.start, belt.end)
       const beltAngle = getAngleOfTwoPoints(belt.start, belt.end) * 180 / Math.PI
       const prevBeltAngle = getAngleOfTwoPoints(prevBelt.start, prevBelt.end) * 180 / Math.PI
@@ -69,7 +74,7 @@ export const DataTable = ({
           </td>
 
           <td>
-            {pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : (
+            {pulley.type === PULLEY_TYPE.IDLER ? '-' : (
               <div className="input-group input-group-sm">
                 <input
                   type="number"
@@ -84,7 +89,7 @@ export const DataTable = ({
           </td>
 
           <td>
-            {pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : (
+            {pulley.type === PULLEY_TYPE.IDLER ? '-' : (
               <div className="input-group input-group-sm">
                 <select
                   id="inputRotation"
@@ -107,7 +112,7 @@ export const DataTable = ({
                 value={pulley.type}
                 onChange={e => onTypeChange(e.target.value, pulley.id)}
               >
-                <option value={PULLEY_TYPE.POINT_ON_CONVEYOR}>POINT</option>
+                <option value={PULLEY_TYPE.IDLER}>POINT</option>
                 <option>{PULLEY_TYPE.PULLEY}</option>
                 <option>{PULLEY_TYPE.DRIVE_PULLEY}</option>
               </select>
@@ -131,8 +136,8 @@ export const DataTable = ({
 
           <td>{beltLength.toFixed(2)}</td>
           <td>{beltAngle.toFixed(2)}&#176;</td>
-          <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : contactLength.toFixed(2)}</td>
-          <td>{pulley.type === PULLEY_TYPE.POINT_ON_CONVEYOR ? '-' : contactAngle.toFixed(2)}{pulley.type !== PULLEY_TYPE.POINT_ON_CONVEYOR && <span>&#176;</span>}</td>
+          <td>{pulley.type === PULLEY_TYPE.IDLER ? '-' : contactLength.toFixed(2)}</td>
+          <td>{pulley.type === PULLEY_TYPE.IDLER ? '-' : contactAngle.toFixed(2)}{pulley.type !== PULLEY_TYPE.IDLER && <span>&#176;</span>}</td>
         </tr>
       )
     })}
