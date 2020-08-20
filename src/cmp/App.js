@@ -53,7 +53,7 @@ export class App extends React.Component {
 
               {this.state.dropItem === 'NONE' ? (
                 <div className="dropdown">
-                  <button className="btn btn-secondary dropdown-toggle" type="button" id="DropItemDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Drop Item</button>
+                  <button className="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="DropItemDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Drop Item</button>
                   <div className="dropdown-menu" aria-labelledby="DropItemDropdown">
                     <a className="dropdown-item" href="#" data-dropitem="IDLER"     onClick={this.onToggleDropItem}>Idler</a>
                     <hr/>
@@ -72,6 +72,11 @@ export class App extends React.Component {
               ) : (
                 <button className="btn btn-sm btn-outline-secondary" data-dropitem="NONE" onClick={this.onToggleDropItem}>Cancel</button>
               )}
+
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={this.onFitAllClick}
+              >Fit all</button>
 
               <Designer
                 pulleys={this.state.pulleys}
@@ -326,6 +331,42 @@ export class App extends React.Component {
         },
       }))
     }
+  }
+  
+  onFitAllClick = () => {
+    const bounds = {
+      left: Number.MAX_SAFE_INTEGER,
+      right: Number.MIN_SAFE_INTEGER,
+      top: Number.MIN_SAFE_INTEGER,
+      bottom: Number.MAX_SAFE_INTEGER,
+    }
+    
+    this.state.pulleys.forEach(pulley => {
+      const pulleyBounds = {
+        left: pulley.x - pulley.radius,
+        right: pulley.x + pulley.radius,
+        top: pulley.y + pulley.radius,
+        bottom: pulley.y - pulley.radius,
+      }
+      
+      pulleyBounds.left < bounds.left && (bounds.left = pulleyBounds.left)
+      pulleyBounds.right > bounds.right && (bounds.right = pulleyBounds.right)
+      pulleyBounds.top > bounds.top && (bounds.top = pulleyBounds.top)
+      pulleyBounds.bottom < bounds.bottom && (bounds.bottom = pulleyBounds.bottom)
+    })
+
+    const scale = 1200 / (bounds.right - bounds.left)
+    this.stage.scale({x: scale, y: scale * -1})
+
+    const x = bounds.left * this.stage.scaleX() * -1
+    const y = bounds.top * this.stage.scaleY() * -1
+
+    this.stage.position({
+      x,
+      y,
+    })
+
+    this.stage.batchDraw()
   }
 
   //endregion Callbacks

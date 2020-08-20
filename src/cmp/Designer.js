@@ -1,6 +1,7 @@
 import React from 'react'
+import update from 'immutability-helper'
 import _ from 'lodash'
-import {Stage, Layer, Circle, Line, Group, Text} from 'react-konva'
+import {Stage, Layer, Circle, Line, Group, Text, Rect} from 'react-konva'
 
 import {PULLEY_TYPE, HOPPER_TYPE} from '../utils/types'
 
@@ -239,6 +240,10 @@ class Grid extends React.Component {
 }
 
 export class Designer extends React.Component {
+  state = {
+    selection: null,
+  }
+
   render() {
     log('render Designer')
 
@@ -257,12 +262,16 @@ export class Designer extends React.Component {
     
     return (
       <Stage
+        id="stage"
         width={1200}
         height={600}
         onMouseMove={this.onMouseMove}
         onMouseLeave={onStageMouseLeave}
+        onMouseDown={this.onMouseDown}
+        onMouseUp={this.onMouseUp}
         onClick={onStageClick}
         onWheel={this.onWheel}
+        onContextMenu={this.onContextMenu}
         draggable
         y={600}
         scaleY={-1}
@@ -311,6 +320,16 @@ export class Designer extends React.Component {
               type={dropItem}
             />
           )}
+          {this.state.selection && (
+            <Rect
+              x={this.state.selection[0]}
+              y={this.state.selection[1]}
+              width={this.state.selection[2] - this.state.selection[0]}
+              height={this.state.selection[3] - this.state.selection[1]}
+              fill="#888"
+              opacity={0.2}
+            />
+          )}
         </Layer>
       </Stage>
     )
@@ -322,15 +341,30 @@ export class Designer extends React.Component {
     this.stage = window.Konva.stages[0]
   }
 
+/*
   shouldComponentUpdate(newProps) {
     return !_.isEqual(this.props, newProps)
   }
+*/
 
   //endregion Lifecycle
 
   //region Callbacks
 
-  onMouseMove = ({evt}) => this.props.onStageMouseMove(evt.layerX, evt.layerY)
+  onMouseMove = ({evt, target}) => {
+    if(this.state.selection) {
+      const stageX = (evt.layerX - this.stage.x()) / this.stage.scaleX()
+      const stageY = (evt.layerY - this.stage.y()) / this.stage.scaleY()
+      // console.log(stageX, stageY)
+
+      this.setState(state => update(state, {
+        selection: {
+          $splice: [[2, 2, stageX, stageY]],
+        },
+      }))
+    }
+    this.props.onStageMouseMove(evt.layerX, evt.layerY)
+  }
 
   onWheel = ({evt}) => {
     evt.preventDefault()
@@ -359,6 +393,39 @@ export class Designer extends React.Component {
     }
     this.stage.position(newPos)
     this.stage.batchDraw()
+  }
+
+  onMouseDown = ({evt}) => {
+    if(evt.button === 2) {
+      const x = (evt.layerX - this.stage.x()) / this.stage.scaleX()
+      const y = (evt.layerY - this.stage.y()) / this.stage.scaleY()
+
+      this.setState({selection: [x, y, x, y,]})
+    }
+  }
+
+  onMouseUp = ({evt}) => {
+    if(evt.button === 2) {
+      const scale = 1200 / (this.state.selection[2] - this.state.selection[0])
+      this.stage.scale({x: scale, y: scale * -1})
+
+      const x = this.state.selection[0] * this.stage.scaleX() * -1
+      const y = this.state.selection[1] * this.stage.scaleY() * -1
+
+      this.stage.position({
+        x,
+        y,
+      })
+
+      this.stage.batchDraw()
+
+      this.setState({selection: null})
+    }
+  }
+
+  onContextMenu = ({evt}) => {
+    evt.preventDefault()
+    return false
   }
 
   //endregion Callbacks
