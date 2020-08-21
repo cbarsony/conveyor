@@ -76,3 +76,8 @@ main table {
   margin-bottom: 8px;
   display: block;
 }
+
+#DropItemDropdown {
+  display: inline-block;
+  margin-right: 4px;
+}

@@ -95,6 +95,32 @@ export class Pulley {
       }
     })
   }
+
+  setType(type) {
+    if(type === PULLEY_TYPE.IDLER) {
+      this.radius = 0
+    }
+
+    if(this.type === PULLEY_TYPE.IDLER) {
+      this.radius = 20
+    }
+
+    this.type = type
+  }
+}
+
+export class DrivePulley extends Pulley {
+  /**
+   * @param x {number}
+   * @param y {number}
+   * @param radius {number}
+   * @param rotation {ROTATION}
+   */
+  constructor(x, y, radius = 20, rotation = ROTATION.CLOCKWISE) {
+    super(x, y, PULLEY_TYPE.DRIVE, radius, rotation)
+
+    this.driveCount = 1
+  }
 }
 
 /** @class */

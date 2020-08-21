@@ -9,6 +9,9 @@ const log = message => {
   // console.log(message)
 }
 
+const closestLess = (a, b) => a - (a % b)
+const closestGreater = (a, b) => (a + b) - (a % b)
+
 class Pulley extends React.Component {
 
 /*
@@ -167,9 +170,11 @@ class Hopper extends React.Component {
 
     return (
       <Line
-        points={[x, y, x - 10, y + 10, x + 10, y + 10]}
+        points={[x, y, x - 10, y + 13, x + 10, y + 13]}
         closed
-        stroke="#aaa"
+        stroke="#888"
+        strokeWidth={2}
+        strokeScaleEnabled={false}
         fill="#eee"
       />
     )
@@ -177,12 +182,102 @@ class Hopper extends React.Component {
 }
 
 class Grid extends React.Component {
-  shouldComponentUpdate() {
-    return false
+  shouldComponentUpdate(newProps) {
+    return !_.isEqual(this.props, newProps)
   }
 
   render() {
+    const left = this.props.x / this.props.scale * -1
+    const right = left + 1200 / this.props.scale
+    const top = this.props.y / this.props.scale
+    const bottom = top - 600 / this.props.scale
+    let divisor = 100
+
+    if(this.props.scale < 0.05) {
+      divisor = 5000
+    }
+    else if(this.props.scale < 0.1) {
+      divisor = 1000
+    }
+    else if(this.props.scale < 0.3) {
+      divisor = 500
+    }
+    else if(this.props.scale < 1) {
+      divisor = 100
+    }
+    else if(this.props.scale < 2) {
+      divisor = 50
+    }
+    else if(this.props.scale < 5) {
+      divisor = 10
+    }
+    else if(this.props.scale < 30) {
+      divisor = 5
+    }
+    else {
+      divisor = 1
+    }
+
+    const bounds = {
+      left: closestLess(left, divisor) - divisor,
+      right: closestGreater(right, divisor),
+      top: closestGreater(top, divisor),
+      bottom: closestLess(bottom, divisor) - divisor,
+    }
+    if(isNaN(bounds.left)) {
+      debugger
+    }
     let result = []
+    const fontSize = 1 / this.props.scale * 10
+
+    const verticalLines = _.range(bounds.left, bounds.right, divisor).map(i => {
+      return (
+        <React.Fragment
+          key={`grid_v_${i}`}
+        >
+          <Line
+            stroke="#aaa"
+            points={[i, bounds.top, i, bounds.bottom]}
+            dash={i % (5 * divisor) === 0 ? [] : [2, 3]}
+            strokeWidth={i === 0 ? 1 : 0.5}
+            shadowForStrokeEnabled={false}
+            strokeScaleEnabled={false}
+          />
+          <Text
+            text={i}
+            x={i}
+            y={fontSize}
+            scaleY={-1}
+            fontSize={fontSize}
+          />
+        </React.Fragment>
+      )
+    })
+
+    const horizontalLines = _.range(bounds.bottom, bounds.top, divisor).map(i => (
+        <React.Fragment
+          key={`grid_h_${i}`}
+        >
+          <Line
+            stroke="#aaa"
+            points={[bounds.left, i, bounds.right, i]}
+            dash={i % (5 * divisor) === 0 ? [] : [2, 3]}
+            strokeWidth={i === 0 ? 1 : 0.5}
+            shadowForStrokeEnabled={false}
+            strokeScaleEnabled={false}
+          />
+          <Text
+            text={i !== 0 ? i : null}
+            x={0}
+            y={i + fontSize}
+            scaleY={-1}
+            fontSize={fontSize}
+          />
+        </React.Fragment>
+      )
+    )
+
+    return [...verticalLines, ...horizontalLines]
 
     _.range(-100, 100).forEach(i => {
       const horizontalPoints = [-10000, i * -100, 10000, i * -100]
@@ -277,7 +372,13 @@ export class Designer extends React.Component {
         scaleY={-1}
       >
         <Layer>
-          {isGridVisible && <Grid/>}
+          {this.stage && isGridVisible && (
+            <Grid
+              x={this.stage.x()}
+              y={this.stage.y()}
+              scale={this.stage.scaleX()}
+            />
+          )}
           {pulleys.map((pulley, pulleyIndex) => {
             const nextPulleyIndex = pulleyIndex === pulleys.length - 1 ? 0 : pulleyIndex + 1
             const nextPulley = pulleys[nextPulleyIndex]
@@ -355,7 +456,6 @@ export class Designer extends React.Component {
     if(this.state.selection) {
       const stageX = (evt.layerX - this.stage.x()) / this.stage.scaleX()
       const stageY = (evt.layerY - this.stage.y()) / this.stage.scaleY()
-      // console.log(stageX, stageY)
 
       this.setState(state => update(state, {
         selection: {
@@ -374,7 +474,7 @@ export class Designer extends React.Component {
     const scaleBy = 1.1
     const newScale = evt.deltaY < 0 ? oldScaleX * scaleBy : oldScaleX / scaleBy
 
-    if(newScale < 0.1 || newScale > 10) {
+    if(newScale < 0.01 || newScale > 100) {
       return
     }
 
@@ -393,6 +493,7 @@ export class Designer extends React.Component {
     }
     this.stage.position(newPos)
     this.stage.batchDraw()
+    this.forceUpdate()
   }
 
   onMouseDown = ({evt}) => {
@@ -405,19 +506,24 @@ export class Designer extends React.Component {
   }
 
   onMouseUp = ({evt}) => {
+    const selectionHasWidth = () => this.state.selection[0] !== this.state.selection[2]
+    const isSelectionReversed = () => this.state.selection[0] > this.state.selection[2]
+
     if(evt.button === 2) {
-      const scale = 1200 / (this.state.selection[2] - this.state.selection[0])
-      this.stage.scale({x: scale, y: scale * -1})
+      if(selectionHasWidth()) {
+        const scale = 1200 / Math.abs(this.state.selection[2] - this.state.selection[0])
+        this.stage.scale({x: scale, y: scale * -1})
 
-      const x = this.state.selection[0] * this.stage.scaleX() * -1
-      const y = this.state.selection[1] * this.stage.scaleY() * -1
+        const x = this.state.selection[isSelectionReversed() ? 2 : 0] * this.stage.scaleX() * -1
+        const y = this.state.selection[isSelectionReversed() ? 3 : 1] * this.stage.scaleY() * -1
 
-      this.stage.position({
-        x,
-        y,
-      })
+        this.stage.position({
+          x,
+          y,
+        })
 
-      this.stage.batchDraw()
+        this.stage.batchDraw()
+      }
 
       this.setState({selection: null})
     }

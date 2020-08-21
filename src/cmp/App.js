@@ -8,6 +8,7 @@ import {Designer} from './Designer'
 import {DataTable} from './DataTable'
 import {
   Pulley,
+  DrivePulley,
   PULLEY_TYPE,
   HOPPER_TYPE,
 } from '../utils/types'
@@ -52,7 +53,7 @@ export class App extends React.Component {
             <div className="collapse show" id="CollapseDesigner">
 
               {this.state.dropItem === 'NONE' ? (
-                <div className="dropdown">
+                <div id="DropItemDropdown" className="dropdown">
                   <button className="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="DropItemDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Drop Item</button>
                   <div className="dropdown-menu" aria-labelledby="DropItemDropdown">
                     <a className="dropdown-item" href="#" data-dropitem="IDLER"     onClick={this.onToggleDropItem}>Idler</a>
@@ -70,7 +71,7 @@ export class App extends React.Component {
                 </div>
 
               ) : (
-                <button className="btn btn-sm btn-outline-secondary" data-dropitem="NONE" onClick={this.onToggleDropItem}>Cancel</button>
+                <button id="DropItemDropdown" className="btn btn-sm btn-outline-secondary" data-dropitem="NONE" onClick={this.onToggleDropItem}>Cancel</button>
               )}
 
               <button
@@ -205,40 +206,19 @@ export class App extends React.Component {
   }
 
   onTypeChange = (type, pulleyId) => {
-/*
     const id = pulleyId || this.state.selectedPulleyId
     const pulleyIndex = this.state.pulleys.findIndex(p => p.id === id)
 
     const pulley = this.state.pulleys[pulleyIndex]
-    let newPulley
-
-    switch(type) {
-      case PULLEY_TYPE.IDLER:
-        newPulley = new PointOnConveyor(pulley.id, pulley.x, pulley.y)
-        break
-
-      case PULLEY_TYPE.PULLEY:
-        const pulleyRadius = pulley.type === PULLEY_TYPE.IDLER ? 20 : pulley.radius
-        newPulley = new Pulley(pulley.x, pulley.y, pulleyRadius, pulley.rotation)
-        break
-
-      case PULLEY_TYPE.DRIVE_PULLEY:
-        const drivePulleyRadius = pulley.type === PULLEY_TYPE.IDLER ? 20 : pulley.radius
-        newPulley = new DrivePulley(pulley.id, pulley.x, pulley.y, drivePulleyRadius, pulley.rotation)
-        break
-
-      default:
-        throw new Error(`Unknown pulley type ${type}`)
-    }
+    pulley.setType(type)
 
     this.setState(state => update(state, {
       pulleys: {
         [pulleyIndex]: {
-          $set: newPulley,
+          $set: pulley,
         },
       },
     }))
-*/
   }
 
   onStageMouseMove = (x, y) => {
@@ -323,7 +303,14 @@ export class App extends React.Component {
     }
     else {
       const prevPulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.dropIndicator.pulleyId)
-      const newPulley = new Pulley(this.state.dropIndicator.x, this.state.dropIndicator.y, PULLEY_TYPE[this.state.dropItem])
+      let newPulley
+
+      if(this.state.dropItem === PULLEY_TYPE.DRIVE) {
+        newPulley = new DrivePulley(this.state.dropIndicator.x, this.state.dropIndicator.y)
+      }
+      else {
+        newPulley = new Pulley(this.state.dropIndicator.x, this.state.dropIndicator.y, PULLEY_TYPE[this.state.dropItem])
+      }
 
       this.setState(state => update(state, {
         pulleys: {
@@ -367,6 +354,7 @@ export class App extends React.Component {
     })
 
     this.stage.batchDraw()
+    this.forceUpdate()
   }
 
   //endregion Callbacks

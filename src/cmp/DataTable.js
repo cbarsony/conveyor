@@ -1,4 +1,5 @@
 import React from 'react'
+import _ from 'lodash'
 
 import {ROTATION, PULLEY_TYPE} from '../utils/types'
 import {getDistanceOfTwoPoints, getAngleOfTwoPoints} from '../utils/calculator'
@@ -112,15 +113,15 @@ export const DataTable = ({
                 value={pulley.type}
                 onChange={e => onTypeChange(e.target.value, pulley.id)}
               >
-                <option value={PULLEY_TYPE.IDLER}>POINT</option>
-                <option>{PULLEY_TYPE.PULLEY}</option>
-                <option>{PULLEY_TYPE.DRIVE_PULLEY}</option>
+                {_.values(PULLEY_TYPE).map(pulleyType => (
+                  <option key={pulleyType} value={pulleyType}>{pulleyType}</option>
+                ))}
               </select>
             </div>
           </td>
 
           <td>
-            {pulley.type === PULLEY_TYPE.DRIVE_PULLEY ? (
+            {pulley.type === PULLEY_TYPE.DRIVE ? (
               <div className="input-group input-group-sm">
                 <input
                   type="number"
