@@ -1,5 +1,3 @@
-
-
 import React from 'react'
 import update from 'immutability-helper'
 import Flatten from '@flatten-js/core'
@@ -345,6 +343,7 @@ export class App extends React.Component {
       top: Number.MIN_SAFE_INTEGER,
       bottom: Number.MAX_SAFE_INTEGER,
     }
+    const gap = 10
     
     this.state.pulleys.forEach(pulley => {
       const pulleyBounds = {
@@ -354,13 +353,30 @@ export class App extends React.Component {
         bottom: pulley.y - pulley.radius,
       }
       
-      pulleyBounds.left < bounds.left && (bounds.left = pulleyBounds.left)
-      pulleyBounds.right > bounds.right && (bounds.right = pulleyBounds.right)
-      pulleyBounds.top > bounds.top && (bounds.top = pulleyBounds.top)
-      pulleyBounds.bottom < bounds.bottom && (bounds.bottom = pulleyBounds.bottom)
+      pulleyBounds.left < bounds.left && (bounds.left = pulleyBounds.left - gap)
+      pulleyBounds.right > bounds.right && (bounds.right = pulleyBounds.right + gap)
+      pulleyBounds.top > bounds.top && (bounds.top = pulleyBounds.top + gap)
+      pulleyBounds.bottom < bounds.bottom && (bounds.bottom = pulleyBounds.bottom - gap)
     })
 
+    const boundScale = (bounds.right - bounds.left) / (bounds.top - bounds.bottom)
+
+    //too narrow
+    if(boundScale < 2) {
+      const expectedWidth = (bounds.top - bounds.bottom) * 2
+      const increase = (expectedWidth - (bounds.right - bounds.left)) / 2
+      bounds.right += increase
+      bounds.left -= increase
+    }
+    //too wide
+    else if(boundScale > 2) {
+      const expectedHeight = (bounds.right - bounds.left) / 2
+      const increase = (expectedHeight - (bounds.top - bounds.bottom)) / 2
+      bounds.top += increase
+    }
+
     const scale = 1200 / (bounds.right - bounds.left)
+
     this.stage.scale({x: scale, y: scale * -1})
 
     const x = bounds.left * this.stage.scaleX() * -1

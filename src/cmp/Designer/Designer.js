@@ -129,7 +129,7 @@ export class Designer extends React.Component {
 
   //region Callbacks
 
-  onMouseMove = ({evt, target}) => {
+  onMouseMove = ({evt}) => {
     if(this.state.selection) {
       const stageX = (evt.layerX - this.stage.x()) / this.stage.scaleX()
       const stageY = (evt.layerY - this.stage.y()) / this.stage.scaleY()
@@ -183,16 +183,52 @@ export class Designer extends React.Component {
   }
 
   onMouseUp = ({evt}) => {
-    const selectionHasWidth = () => this.state.selection[0] !== this.state.selection[2]
-    const isSelectionReversed = () => this.state.selection[0] > this.state.selection[2]
-
     if(evt.button === 2) {
-      if(selectionHasWidth()) {
-        const scale = 1200 / Math.abs(this.state.selection[2] - this.state.selection[0])
+      const selectionWidth = Math.abs(this.state.selection[2] - this.state.selection[0])
+      const isSelectionReversed = () => this.state.selection[0] > this.state.selection[2]
+
+      if(selectionWidth > 0) {
+        let bounds
+
+        if(isSelectionReversed()) {
+          bounds = {
+            left: this.state.selection[1],
+            right: this.state.selection[3],
+            top: this.state.selection[0],
+            bottom: this.state.selection[2],
+          }
+        }
+        else {
+          bounds = {
+            left: this.state.selection[0],
+            right: this.state.selection[2],
+            top: this.state.selection[1],
+            bottom: this.state.selection[3],
+          }
+        }
+
+        const boundScale = (bounds.right - bounds.left) / (bounds.top - bounds.bottom)
+
+        //too narrow
+        if(boundScale < 2) {
+          const expectedWidth = (bounds.top - bounds.bottom) * 2
+          const increase = (expectedWidth - (bounds.right - bounds.left)) / 2
+          bounds.right += increase
+          bounds.left -= increase
+        }
+        //too wide
+        else if(boundScale > 2) {
+          const expectedHeight = (bounds.right - bounds.left) / 2
+          const increase = (expectedHeight - (bounds.top - bounds.bottom)) / 2
+          bounds.top += increase
+        }
+
+        const scale = 1200 / (bounds.right - bounds.left)
+
         this.stage.scale({x: scale, y: scale * -1})
 
-        const x = this.state.selection[isSelectionReversed() ? 2 : 0] * this.stage.scaleX() * -1
-        const y = this.state.selection[isSelectionReversed() ? 3 : 1] * this.stage.scaleY() * -1
+        const x = bounds.left * this.stage.scaleX() * -1
+        const y = bounds.top * this.stage.scaleY() * -1
 
         this.stage.position({
           x,
@@ -200,6 +236,7 @@ export class Designer extends React.Component {
         })
 
         this.stage.batchDraw()
+        this.forceUpdate()
       }
 
       this.setState({selection: null})
