@@ -99,7 +99,7 @@ export const Sidebar = ({
             </div>
           </div>
 
-          {pulley.type === PULLEY_TYPE.DRIVE_PULLEY && (
+          {pulley.type === PULLEY_TYPE.DRIVE && (
             <div className="form-group row">
               <label htmlFor="inputDriveCount" className="col-sm-3 col-form-label">Drives</label>
               <div className="col-sm-9">

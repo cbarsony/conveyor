@@ -1,10 +1,12 @@
+
+
 import React from 'react'
 import update from 'immutability-helper'
 import Flatten from '@flatten-js/core'
 
 import {Navbar} from './Navbar'
 import {Sidebar} from './Sidebar'
-import {Designer} from './Designer'
+import {Designer} from './Designer/Designer'
 import {DataTable} from './DataTable'
 import {
   Pulley,
@@ -56,17 +58,17 @@ export class App extends React.Component {
                 <div id="DropItemDropdown" className="dropdown">
                   <button className="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="DropItemDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Drop Item</button>
                   <div className="dropdown-menu" aria-labelledby="DropItemDropdown">
-                    <a className="dropdown-item" href="#" data-dropitem="IDLER"     onClick={this.onToggleDropItem}>Idler</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="IDLER"     onClick={this.onToggleDropItem}>Idler</a>
                     <hr/>
-                    <a className="dropdown-item" href="#" data-dropitem="TAIL"      onClick={this.onToggleDropItem}>Tail Pulley</a>
-                    <a className="dropdown-item" href="#" data-dropitem="HEAD"      onClick={this.onToggleDropItem}>Head Pulley</a>
-                    <a className="dropdown-item" href="#" data-dropitem="BEND"      onClick={this.onToggleDropItem}>Bend Pulley</a>
-                    <a className="dropdown-item" href="#" data-dropitem="SNUB"      onClick={this.onToggleDropItem}>Snub Pulley</a>
-                    <a className="dropdown-item" href="#" data-dropitem="TAKEUP"    onClick={this.onToggleDropItem}>Takeup Pulley</a>
-                    <a className="dropdown-item" href="#" data-dropitem="DRIVE"     onClick={this.onToggleDropItem}>Drive Pulley</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="TAIL"      onClick={this.onToggleDropItem}>Tail Pulley</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="HEAD"      onClick={this.onToggleDropItem}>Head Pulley</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="BEND"      onClick={this.onToggleDropItem}>Bend Pulley</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="SNUB"      onClick={this.onToggleDropItem}>Snub Pulley</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="TAKEUP"    onClick={this.onToggleDropItem}>Takeup Pulley</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="DRIVE"     onClick={this.onToggleDropItem}>Drive Pulley</a>
                     <hr/>
-                    <a className="dropdown-item" href="#" data-dropitem="FEED"      onClick={this.onToggleDropItem}>Feed Point</a>
-                    <a className="dropdown-item" href="#" data-dropitem="DISCHARGE" onClick={this.onToggleDropItem}>Discharge Point</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="FEED"      onClick={this.onToggleDropItem}>Feed Point</a>
+                    <a className="dropdown-item" href="/#" data-dropitem="DISCHARGE" onClick={this.onToggleDropItem}>Discharge Point</a>
                   </div>
                 </div>
 
@@ -208,15 +210,31 @@ export class App extends React.Component {
   onTypeChange = (type, pulleyId) => {
     const id = pulleyId || this.state.selectedPulleyId
     const pulleyIndex = this.state.pulleys.findIndex(p => p.id === id)
+    const oldPulley = this.state.pulleys[pulleyIndex]
 
-    const pulley = this.state.pulleys[pulleyIndex]
-    pulley.setType(type)
+    let newPulley
+
+    switch(type) {
+      case PULLEY_TYPE.IDLER:
+        newPulley = new Pulley(oldPulley.x, oldPulley.y, type)
+        break
+
+      case PULLEY_TYPE.DRIVE:
+        newPulley = new DrivePulley(oldPulley.x, oldPulley.y, 20, oldPulley.rotation)
+        break
+
+      default:
+        newPulley = new Pulley(oldPulley.x, oldPulley.y, type, 20, oldPulley.rotation)
+    }
 
     this.setState(state => update(state, {
       pulleys: {
         [pulleyIndex]: {
-          $set: pulley,
+          $set: newPulley,
         },
+      },
+      selectedPulleyId: {
+        $set: newPulley.id,
       },
     }))
   }
