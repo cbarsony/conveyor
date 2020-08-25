@@ -4,7 +4,7 @@ import {Line} from 'react-konva'
 
 export class Hopper extends React.Component {
   render() {
-    const {x, y} = this.props
+    const {x, y, onClick} = this.props
 
     return (
       <Line
@@ -14,6 +14,7 @@ export class Hopper extends React.Component {
         strokeWidth={2}
         strokeScaleEnabled={false}
         fill="#eee"
+        onClick={onClick}
       />
     )
   }

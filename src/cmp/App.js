@@ -42,6 +42,7 @@ export class App extends React.Component {
             pulley={this.state.pulleys.find(p => p.id === this.state.selectedPulleyId)}
             onPulleyAttributeChange={this.onPulleyAttributeChange}
             onDeletePulley={this.onDeletePulley}
+            onDeleteHopper={this.onDeleteHopper}
             onRotationChange={this.onRotationChange}
             onTypeChange={this.onTypeChange}
           />
@@ -186,6 +187,22 @@ export class App extends React.Component {
     this.setState(state => update(state, {
       pulleys: {
         $splice: [[pulleyIndex, 1]],
+      },
+    }))
+  }
+
+  onDeleteHopper = id => {
+    const pulleyIndex = this.state.pulleys.findIndex(p => p.id === this.state.selectedPulleyId)
+    const pulley = this.state.pulleys[pulleyIndex]
+    const hopperIndex = pulley.hoppers.findIndex(h => h.id === id)
+
+    this.setState(state => update(state, {
+      pulleys: {
+        [pulleyIndex]: {
+          hoppers: {
+            $splice: [[hopperIndex, 1]],
+          },
+        },
       },
     }))
   }

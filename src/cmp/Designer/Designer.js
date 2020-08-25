@@ -88,6 +88,7 @@ export class Designer extends React.Component {
                 key={hopper.id}
                 x={hopper.x}
                 y={hopper.y}
+                onClick={() => onPulleySelect(pulley.id)}
               />
             ))
           })}

@@ -96,16 +96,17 @@ export class Pulley {
     })
   }
 
-  setType(type) {
-    if(type === PULLEY_TYPE.IDLER) {
-      this.radius = 0
-    }
+  //TODO: test this method!
+  getHopperDistance(hopperId, nextPulley) {
+    const hopperIndex = this.hoppers.findIndex(h => h.id === hopperId)
+    const hopper = this.hoppers[hopperIndex]
+    const beltSection = this.getBeltSection(nextPulley)
+    const segment = new Flatten.Segment(
+      new Flatten.Point(beltSection.start.x, beltSection.start.y),
+      new Flatten.Point(beltSection.end.x, beltSection.end.y),
+    )
 
-    if(this.type === PULLEY_TYPE.IDLER) {
-      this.radius = 20
-    }
-
-    this.type = type
+    return segment.length * hopper.distance
   }
 }
 
@@ -141,7 +142,7 @@ export class BeltSection {
 export class Hopper {
   /**
    * @param type {HOPPER_TYPE}
-   * @param distance {number} - distance from BeltSection start
+   * @param distance {number} - distance from BeltSection start as a ratio of the length of the BeltSection
    */
   constructor(type, distance) {
     this.id = `h${hopperIdCounter++}`
