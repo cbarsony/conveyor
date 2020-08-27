@@ -144,7 +144,7 @@ export const Sidebar = ({
             {pulley.hoppers.map(hopper => (
               <div key={hopper.id} className="form-group row">
                 <div className="col-sm-3">{hopper.id}</div>
-                <strong className="col-sm-5">{hopper.distance}</strong>
+                <strong className="col-sm-5">{hopper.distance.toFixed(5)}</strong>
                 <div className="col-sm-4">
                   <button
                     type="button"

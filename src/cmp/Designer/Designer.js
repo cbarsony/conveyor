@@ -151,6 +151,7 @@ export class Designer extends React.Component {
     const oldScaleY = this.stage.scaleY()
     const scaleBy = 1.1
     const newScale = evt.deltaY < 0 ? oldScaleX * scaleBy : oldScaleX / scaleBy
+    console.log(newScale)
 
     if(newScale < 0.01 || newScale > 100) {
       return

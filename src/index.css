@@ -53,6 +53,7 @@ footer {
 
 main {
   padding-top: 8px;
+  margin-bottom: 40px;
 }
 
 main table {
@@ -80,4 +81,12 @@ main table {
 #DropItemDropdown {
   display: inline-block;
   margin-right: 4px;
+}
+
+#CrossSections {
+  display: flex;
+}
+
+#CrossSections form {
+  padding: 0 4px;
 }

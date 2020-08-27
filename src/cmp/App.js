@@ -6,6 +6,7 @@ import {Navbar} from './Navbar'
 import {Sidebar} from './Sidebar'
 import {Designer} from './Designer/Designer'
 import {DataTable} from './DataTable'
+import {CrossSection} from './CrossSection'
 import {
   Pulley,
   DrivePulley,
@@ -26,6 +27,10 @@ export class App extends React.Component {
       y: 0,
     },
   }
+
+  crossSectionContainer1 = React.createRef()
+  crossSectionContainer2 = React.createRef()
+  crossSectionContainer3 = React.createRef()
 
   render() {
     return (
@@ -107,6 +112,39 @@ export class App extends React.Component {
                 onRotationChange={this.onRotationChange}
                 onTypeChange={this.onTypeChange}
               />
+            </div>
+
+            <button className="toggleButton btn btn-sm btn-outline-secondary" type="button" data-toggle="collapse" data-target="#CollapseCrossSection">Cross Section Profile Data</button>
+
+            <div id="CrossSections">
+              
+              <div ref={this.crossSectionContainer1} className="collapse show" id="CollapseCrossSection">
+                {this.crossSectionContainer1.current && (
+                  <CrossSection
+                    id={1}
+                    containerWidth={this.crossSectionContainer1.current.parentElement.clientWidth / 3}
+                  />
+                )}
+              </div>
+              
+              <div ref={this.crossSectionContainer2} className="collapse show" id="CollapseCrossSection">
+                {this.crossSectionContainer2.current && (
+                  <CrossSection
+                    id={2}
+                    containerWidth={this.crossSectionContainer2.current.parentElement.clientWidth / 3}
+                  />
+                )}
+              </div>
+              
+              <div ref={this.crossSectionContainer3} className="collapse show" id="CollapseCrossSection">
+                {this.crossSectionContainer3.current && (
+                  <CrossSection
+                    id={3}
+                    containerWidth={this.crossSectionContainer3.current.parentElement.clientWidth / 3}
+                  />
+                )}
+              </div>
+              
             </div>
 
           </main>
