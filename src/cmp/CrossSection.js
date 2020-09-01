@@ -85,8 +85,8 @@ export class CrossSection extends React.Component {
         </form>
         <Stage
           id={`stageCrossSection${this.props.id}`}
-          width={this.props.containerWidth}
-          height={this.props.containerWidth}
+          width={this.props.containerWidth - 4}
+          height={this.props.containerWidth - 4}
         >
           <Layer>
             <Line

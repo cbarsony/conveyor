@@ -90,3 +90,16 @@ main table {
 #CrossSections form {
   padding: 0 4px;
 }
+
+#DropItemDropdown {
+  position: fixed;
+  top: 48px;
+  left: 515px;
+  z-index: 1;
+}
+
+#FitAllButton {
+  position: fixed;
+  top: 48px;
+  left: 615px;
+}

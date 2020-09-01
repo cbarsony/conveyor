@@ -13,9 +13,9 @@ export class Grid extends React.Component {
 
   render() {
     const left = this.props.x / this.props.scale * -1
-    const right = left + 1200 / this.props.scale
+    const right = left + this.props.width / this.props.scale
     const top = this.props.y / this.props.scale
-    const bottom = top - 600 / this.props.scale
+    const bottom = top - (this.props.width / 2) / this.props.scale
     let divisor = 100
 
     if(this.props.scale < 0.05) {

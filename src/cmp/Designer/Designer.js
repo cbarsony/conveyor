@@ -32,8 +32,8 @@ export class Designer extends React.Component {
     
     return (
       <Stage
-        id="stage"
-        width={1200}
+        id="stageDesigner"
+        width={this.props.width}
         height={600}
         onMouseMove={this.onMouseMove}
         onMouseLeave={onStageMouseLeave}
@@ -54,6 +54,7 @@ export class Designer extends React.Component {
               x={this.stage.x()}
               y={this.stage.y()}
               scale={this.stage.scaleX()}
+              width={this.props.width}
             />
           )}
           {pulleys.map((pulley, pulleyIndex) => {
@@ -117,7 +118,8 @@ export class Designer extends React.Component {
   //region Lifecycle
 
   componentDidMount() {
-    this.stage = window.Konva.stages[0]
+    this.stage = window.Konva.stages.find(stage => stage.attrs.id === 'stageDesigner')
+    this.forceUpdate()
   }
 
 /*
@@ -151,7 +153,6 @@ export class Designer extends React.Component {
     const oldScaleY = this.stage.scaleY()
     const scaleBy = 1.1
     const newScale = evt.deltaY < 0 ? oldScaleX * scaleBy : oldScaleX / scaleBy
-    console.log(newScale)
 
     if(newScale < 0.01 || newScale > 100) {
       return
@@ -188,6 +189,7 @@ export class Designer extends React.Component {
     if(evt.button === 2) {
       const selectionWidth = Math.abs(this.state.selection[2] - this.state.selection[0])
       const isSelectionReversed = () => this.state.selection[0] > this.state.selection[2]
+      const canvasRatio = this.props.width / 600
 
       if(selectionWidth > 0) {
         let bounds
@@ -212,20 +214,20 @@ export class Designer extends React.Component {
         const boundScale = (bounds.right - bounds.left) / (bounds.top - bounds.bottom)
 
         //too narrow
-        if(boundScale < 2) {
-          const expectedWidth = (bounds.top - bounds.bottom) * 2
+        if(boundScale < canvasRatio) {
+          const expectedWidth = (bounds.top - bounds.bottom) * canvasRatio
           const increase = (expectedWidth - (bounds.right - bounds.left)) / 2
           bounds.right += increase
           bounds.left -= increase
         }
         //too wide
-        else if(boundScale > 2) {
-          const expectedHeight = (bounds.right - bounds.left) / 2
+        else if(boundScale > canvasRatio) {
+          const expectedHeight = (bounds.right - bounds.left) / canvasRatio
           const increase = (expectedHeight - (bounds.top - bounds.bottom)) / 2
           bounds.top += increase
         }
 
-        const scale = 1200 / (bounds.right - bounds.left)
+        const scale = this.props.width / (bounds.right - bounds.left)
 
         this.stage.scale({x: scale, y: scale * -1})
 

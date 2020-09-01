@@ -28,6 +28,7 @@ export class App extends React.Component {
     },
   }
 
+  designerContainer = React.createRef()
   crossSectionContainer1 = React.createRef()
   crossSectionContainer2 = React.createRef()
   crossSectionContainer3 = React.createRef()
@@ -56,7 +57,7 @@ export class App extends React.Component {
 
             <button className="toggleButton btn btn-sm btn-outline-secondary" type="button" data-toggle="collapse" data-target="#CollapseDesigner">Horizontal Profile Design</button>
 
-            <div className="collapse show" id="CollapseDesigner">
+            <div className="collapse show" id="CollapseDesigner" ref={this.designerContainer}>
 
               {this.state.dropItem === 'NONE' ? (
                 <div id="DropItemDropdown" className="dropdown">
@@ -81,24 +82,28 @@ export class App extends React.Component {
               )}
 
               <button
+                id="FitAllButton"
                 className="btn btn-sm btn-outline-secondary"
                 onClick={this.onFitAllClick}
               >Fit all</button>
 
-              <Designer
-                pulleys={this.state.pulleys}
-                selectedPulleyId={this.state.selectedPulleyId}
-                dropIndicator={this.state.dropIndicator}
-                dropItem={this.state.dropItem}
-                isGridVisible={this.state.isGridVisible}
+              {this.designerContainer.current && (
+                <Designer
+                  pulleys={this.state.pulleys}
+                  selectedPulleyId={this.state.selectedPulleyId}
+                  dropIndicator={this.state.dropIndicator}
+                  dropItem={this.state.dropItem}
+                  isGridVisible={this.state.isGridVisible}
+                  width={this.designerContainer.current.offsetWidth}
 
-                onPulleyMove={this.onPulleyMove}
-                onPulleySelect={this.onPulleySelect}
+                  onPulleyMove={this.onPulleyMove}
+                  onPulleySelect={this.onPulleySelect}
 
-                onStageMouseMove={this.onStageMouseMove}
-                onStageMouseLeave={this.onStageMouseLeave}
-                onStageClick={this.onStageClick}
-              />
+                  onStageMouseMove={this.onStageMouseMove}
+                  onStageMouseLeave={this.onStageMouseLeave}
+                  onStageClick={this.onStageClick}
+                />
+              )}
 
             </div>
 
@@ -160,8 +165,6 @@ export class App extends React.Component {
   //region Lifecycle
 
   componentDidMount() {
-    this.stage = window.Konva.stages[0]
-
     const pulleys = [
       new Pulley(200, 300, PULLEY_TYPE.HEAD),
       new Pulley(1000, 300, PULLEY_TYPE.TAIL),
@@ -293,8 +296,10 @@ export class App extends React.Component {
   }
 
   onStageMouseMove = (x, y) => {
-    const stageX = (x - this.stage.x()) / this.stage.scaleX()
-    const stageY = (y - this.stage.y()) / this.stage.scaleY()
+    const stage = window.Konva.stages.find(stage => stage.attrs.id === 'stageDesigner')
+    
+    const stageX = (x - stage.x()) / stage.scaleX()
+    const stageY = (y - stage.y()) / stage.scaleY()
 
     if(this.state.dropItem === 'NONE') {
       this.setState({
@@ -392,6 +397,7 @@ export class App extends React.Component {
   }
   
   onFitAllClick = () => {
+    const stage = window.Konva.stages.find(stage => stage.attrs.id === 'stageDesigner')
     const bounds = {
       left: Number.MAX_SAFE_INTEGER,
       right: Number.MIN_SAFE_INTEGER,
@@ -399,7 +405,9 @@ export class App extends React.Component {
       bottom: Number.MAX_SAFE_INTEGER,
     }
     const gap = 10
-    
+    const canvasWidth = this.designerContainer.current.parentElement.clientWidth
+    const canvasRatio = canvasWidth / 600
+
     this.state.pulleys.forEach(pulley => {
       const pulleyBounds = {
         left: pulley.x - pulley.radius,
@@ -417,32 +425,32 @@ export class App extends React.Component {
     const boundScale = (bounds.right - bounds.left) / (bounds.top - bounds.bottom)
 
     //too narrow
-    if(boundScale < 2) {
-      const expectedWidth = (bounds.top - bounds.bottom) * 2
+    if(boundScale < canvasRatio) {
+      const expectedWidth = (bounds.top - bounds.bottom) * canvasRatio
       const increase = (expectedWidth - (bounds.right - bounds.left)) / 2
       bounds.right += increase
       bounds.left -= increase
     }
     //too wide
-    else if(boundScale > 2) {
-      const expectedHeight = (bounds.right - bounds.left) / 2
+    else if(boundScale > canvasRatio) {
+      const expectedHeight = (bounds.right - bounds.left) / canvasRatio
       const increase = (expectedHeight - (bounds.top - bounds.bottom)) / 2
       bounds.top += increase
     }
 
-    const scale = 1200 / (bounds.right - bounds.left)
+    const scale = canvasWidth / (bounds.right - bounds.left)
 
-    this.stage.scale({x: scale, y: scale * -1})
+    stage.scale({x: scale, y: scale * -1})
 
-    const x = bounds.left * this.stage.scaleX() * -1
-    const y = bounds.top * this.stage.scaleY() * -1
+    const x = bounds.left * stage.scaleX() * -1
+    const y = bounds.top * stage.scaleY() * -1
 
-    this.stage.position({
+    stage.position({
       x,
       y,
     })
 
-    this.stage.batchDraw()
+    stage.batchDraw()
     this.forceUpdate()
   }
 
